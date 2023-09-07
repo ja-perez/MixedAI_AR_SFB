@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.floorDiv;
 import static java.lang.Math.min;
@@ -577,8 +578,8 @@ public class dataCol implements Runnable {
 
                             //   if (mInstance.trainedTris == true) {
                             try {
-                                baselineAlg((float) nextTris);
-                                // odraAlg((float) nextTris);
+                                // baselineAlg((float) nextTris);
+                                odraAlg((float) nextTris);
                                 time2 = System.nanoTime() / 1000000;
                                 // long t2 = System.nanoTime() / 1000000;
                                 mInstance.t_loop1 = time2 - time1 - (sleepTime * (objC - 1));
@@ -1018,24 +1019,43 @@ public class dataCol implements Runnable {
     }
 
     float baselineAlg(float tUP) throws InterruptedException {
-        float avg_obj_tri_count = tUP / mInstance.objectCount;
+        float tot_num_objects = mInstance.objectCount;
+        float current_total_tris = tUP;                                  // T^tot
+        float[] new_obj_tri_counts = new float [(int) tot_num_objects];
+        for (int i = 0; i < tot_num_objects; i++)
+            new_obj_tri_counts[i] = 0f;
 
-        mInstance.total_tris = 0;
-        for (int i= 0 ; i < mInstance.objectCount; i++) {
-            float t_i = 0;                                          // object i triangle count
-            float t_i_max = mInstance.renderArray.get(i).orig_tris; // object i max triangle count
-            float R_i = 0;                                          // object i new decimation ratio
-            float R_min_diff = 9999999f;                            // minimum difference between declared decimation ratios and object i's new decimation ratio
+        do {
+            float avg_obj_tri_count = current_total_tris / tot_num_objects;           // T^tot / N
+            current_total_tris = 0;
+            for (int i = 0; i < mInstance.objectCount; i++) {
+                float obj_tri_max = mInstance.renderArray.get(i).orig_tris;
+                float obj_curr_tri_count = new_obj_tri_counts[i];
+                if (obj_curr_tri_count == obj_tri_max) {        // Object triangle count is full
+                    // do nothing
+                } else if (avg_obj_tri_count >= obj_tri_max){   // Avg triangle count will fill current object
+                    new_obj_tri_counts[i] += obj_tri_max;
+                    tot_num_objects -= 1;
+                    current_total_tris += avg_obj_tri_count - obj_tri_max;
+                } else {                                        // Add avg triangle count to objects new triangle count
+                    new_obj_tri_counts[i] += avg_obj_tri_count;
+                }
+            }
+        } while (current_total_tris > 0f);
 
-            t_i = min(avg_obj_tri_count, t_i_max);
-            R_i = t_i / t_i_max;
+        for (int i = 0 ; i < mInstance.objectCount; i++) {
+            float tri_cnt_i = new_obj_tri_counts[i];                     // object i triangle count
+            float tri_max_i = mInstance.renderArray.get(i).orig_tris;    // object i max triangle count
 
+            float R_i = 0;                                               // object i new decimation ratio
+            R_i = tri_cnt_i / tri_max_i;                                 // R_i = T_i / T_i^max             New decimation ratio for object i
+            float R_min_diff = 9999999f;                                 // minimum difference between declared decimation ratios and object i's new decimation ratio
             float R_diff = 0;                                       // current ratio difference
-            for (float ratio: coarse_Ratios) {                      // finding closest ratio to objects i's new value
+            for (float ratio: coarse_Ratios) {                      // finding closest decimation ratio to objects i's new decimation ratio value
                 R_diff = abs(R_i - ratio);
                 if (R_diff < R_min_diff)
                     R_i = ratio;
-                R_min_diff = R_diff;
+                    R_min_diff = R_diff;
             }
             mInstance.ratioArray.set(i, R_i);
             int finalI = i;

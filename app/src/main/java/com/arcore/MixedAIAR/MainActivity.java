@@ -1789,21 +1789,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     this.cancel();
                                     //switch off is for motivation- exp2
                                     switchToggleStream.setChecked(false);
-                                    // runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+                                     runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
                                     runOnUiThread(clearButton::callOnClick);
                                     return;
                                 }
-                                // removePhase=true;
+                                 removePhase=true;
 
 
                                 // last element in the sorted list would be maximum
-                                //int index=   sortedlist[0].get(sortedlist[0].size() - 1);
+//                                int index=   sortedlist[0].get(sortedlist[0].size() - 1);
 
                                 String name = renderArray.get(objectCount - 1).fileName;
                                 renderArray.get(objectCount - 1).baseAnchor.select();
                                 runOnUiThread(removeButton::callOnClick);
 
-                                // runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
+                                 runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
                             }
 
 
@@ -1822,7 +1822,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
                                         // just for detailed exp not for exp 4_1
-                                        /*
+
                                         reParamList.clear();
                                         trisMeanDisk.clear();
                                         trisMeanThr.clear();
@@ -1831,13 +1831,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         reParamList.clear();
                                         // to start over data collection
 
-                                        decTris.clear();*/
+                                        decTris.clear();
 
                                         this.cancel();
 
 
                                         //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
-                                        //   removeTimer.start();
+                                           removeTimer.start();
 
                                         return;
                                     }
@@ -1848,16 +1848,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     float yOffset = Float.parseFloat(cols[2]);
 
 
-                                    //  policy = policySpinner.getSelectedItem().toString();
+//                                      policy = policySpinner.getSelectedItem().toString();
 
-                                    //modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
+                                    modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
                                     float original_tris = excel_tris.get(excelname.indexOf(currentModel));
                                     renderArray.add(objectCount, new decimatedRenderable(currentModel, original_tris));
                                     // commented temp sep
                                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);//
 
 
-                                    // Toast.makeText(MainActivity.this, String.format("Model: %s\nPos: (%f, %f)", currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
+                                     Toast.makeText(MainActivity.this, String.format("Model: %s\nPos: (%f, %f)", currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
 
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -1911,18 +1911,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         i[0]++;
                                         textNumOfAiTasks.setText(String.format("%d", i[0]));
 //
-                                        //  Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
+                                          Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
 
                                         record = taskBr.readLine();
 
                                     }
 
                                     if (record == null) {// this is to immidiately start the AI tasks
-                                        //     Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+                                             Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
                                         switchToggleStream.setChecked(true);
                                         startObject[0] = true; // to make sure if we have ML tasks running
-//                                        for (AiItemsViewModel taskView : mList) {
-//                                            tasks.append(",").append(taskView.getModels().get(taskView.getCurrentModel()));}
+                                        for (AiItemsViewModel taskView : mList) {
+                                            tasks.append(",").append(taskView.getModels().get(taskView.getCurrentModel()));}
 
                                     }
 
