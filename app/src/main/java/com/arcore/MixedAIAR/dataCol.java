@@ -4,6 +4,7 @@ package com.arcore.MixedAIAR;
 import android.util.Log;
 import android.widget.TextView;
 import android.os.SystemClock;
+
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
@@ -24,40 +25,42 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.floorDiv;
+import static java.lang.Math.min;
 
 public class dataCol implements Runnable {
 
-    int binCap=5;
+    int binCap = 5;
     private final MainActivity mInstance;
-    float ref_ratio=0.5f;
+    float ref_ratio = 0.5f;
     int objC;
-    float sensitivity[] ;
+    float sensitivity[];
     float objquality[];
     float tris_share[];
-    Map <Integer, Float> candidate_obj;
-    float []coarse_Ratios=new float[]{1f,0.8f, 0.6f , 0.4f, 0.2f, 0.05f};
+    Map<Integer, Float> candidate_obj;
+    float[] coarse_Ratios = new float[]{1f, 0.8f, 0.6f, 0.4f, 0.2f, 0.05f};
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
-    float [][]fProfit;
-    float [][] tRemainder;
-    int [][] track_obj;
-    int sleepTime=60;
+    float[][] fProfit;
+    float[][] tRemainder;
+    int[][] track_obj;
+    int sleepTime = 60;
     //float candidate_obj[] = new float[total_obj];
-    float tMin[] ;
+    float tMin[];
 
     public dataCol(MainActivity mInstance) {
 
         this.mInstance = mInstance;
 
-        objC=mInstance.objectCount+1;
+        objC = mInstance.objectCount + 1;
         sensitivity = new float[objC];
         tris_share = new float[objC];
-        objquality= new float[objC];// 1- degradation-error
+        objquality = new float[objC];// 1- degradation-error
 
 
         //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
-        fProfit= new float[objC][coarse_Ratios.length];
-        tRemainder= new float[objC][coarse_Ratios.length];
-        track_obj= new int[objC][coarse_Ratios.length];
+        fProfit = new float[objC][coarse_Ratios.length];
+        tRemainder = new float[objC][coarse_Ratios.length];
+        track_obj = new int[objC][coarse_Ratios.length];
         //float candidate_obj[] = new float[total_obj];
         tMin = new float[objC];
 
@@ -83,16 +86,16 @@ public class dataCol implements Runnable {
 
         //int count=0;
         for (int i = 0; i < mInstance.objectCount; i++) {
-            double cur_dis=(double) mInstance.renderArray.get(i).return_distance();
-           // if(cur_dis!=0) {
-                meanDk += cur_dis;
-                meanDkk += mInstance.predicted_distances.get(i).get(1); // 0: next 1 sec, 1: next 2s :  // gets the first time, next 2s-- 3s of every object, ie. d1 of every obj
-              //  count+=1;
-           // }
+            double cur_dis = (double) mInstance.renderArray.get(i).return_distance();
+            // if(cur_dis!=0) {
+            meanDk += cur_dis;
+            meanDkk += mInstance.predicted_distances.get(i).get(1); // 0: next 1 sec, 1: next 2s :  // gets the first time, next 2s-- 3s of every object, ie. d1 of every obj
+            //  count+=1;
+            // }
         }
 
-        int objc= mInstance.objectCount;
-        if(objc>0) {
+        int objc = mInstance.objectCount;
+        if (objc > 0) {
             meanDk /= objc;
             meanDkk /= objc;
 
@@ -109,14 +112,11 @@ public class dataCol implements Runnable {
         }
 
 
-
         //I got an error for regression since decimation occurs in UI thread and Modeling runs at the same time
         // solution is to start data collection after one period passes from algorithm
- // else{ // just collect data when algorithm was applied in the last period
+        // else{ // just collect data when algorithm was applied in the last period
 
         totTris = mInstance.total_tris;
-
-
 
 
         meanThr = mInstance.getThroughput();// after the objects are decimated
@@ -125,22 +125,18 @@ public class dataCol implements Runnable {
 
             meanThr = (double) Math.round(meanThr * 100) / 100;
 
-           // TextView posText2 = (TextView) mInstance.findViewById(R.id.thr);
-           // posText2.setText("Throughput: " + meanThr);
+            // TextView posText2 = (TextView) mInstance.findViewById(R.id.thr);
+            // posText2.setText("Throughput: " + meanThr);
 
 
-
-         //   if (mInstance.nextTris == 0)
-              //  mInstance.nextTris = totTris;
+            //   if (mInstance.nextTris == 0)
+            //  mInstance.nextTris = totTris;
 
             int variousTris = mInstance.trisMeanThr.keySet().size();
 
 
-
-
-
 // this is thr calculated using the modeling
-            double predThr = (mInstance.rohT *  totTris) + (mInstance.rohD * pred_meanD) + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
+            double predThr = (mInstance.rohT * totTris) + (mInstance.rohD * pred_meanD) + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
             predThr = (double) Math.round((double) predThr * 100) / 100;
 
 
@@ -150,7 +146,7 @@ public class dataCol implements Runnable {
 
                 if (mInstance.trisMeanThr.get(totTris).size() == binCap) { // we keep inf of last 10 points
 
-                     cleanOutArraysThr(totTris, pred_meanD, mInstance);// cleans out the closest data to the curr one
+                    cleanOutArraysThr(totTris, pred_meanD, mInstance);// cleans out the closest data to the curr one
 
                 }
 
@@ -168,7 +164,7 @@ public class dataCol implements Runnable {
 
                 //mInstance.trisMeanDisk.put(totTris, meanDk); //removes from the head (older data) -> to then add to the tail
                 mInstance.trisMeanDisk.put(totTris, pred_meanD); //correct:  should have predicted value removes from the head (older data) -> to then add to the tail
-               // mInstance.trisMeanDiskk.put(totTris, meanDkk);
+                // mInstance.trisMeanDiskk.put(totTris, meanDkk);
 
 
             }
@@ -176,25 +172,25 @@ public class dataCol implements Runnable {
 
             if (mInstance.objectCount != 0) {//to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
 
-              //  int size = mInstance.trisMeanThr.size();// total points regardless of points with similar tris
+                //  int size = mInstance.trisMeanThr.size();// total points regardless of points with similar tris
                 // starting throughput model
                 if (variousTris >= 2) {// at least two points to start modeling
 
 
 // checks error of the model after new added model
                     double mape = 0.0; // mean of absolute error
-                    double fit = (mInstance.rohT * totTris) + (mInstance.rohD * pred_meanD )+ mInstance.delta; // fit is predicted current throughput should be predicted distance (we have next 1 sec but ok since we don't move)  for current period
+                    double fit = (mInstance.rohT * totTris) + (mInstance.rohD * pred_meanD) + mInstance.delta; // fit is predicted current throughput should be predicted distance (we have next 1 sec but ok since we don't move)  for current period
                     //double fit = mInstance.thSlope * totTris + mInstance.thIntercept;;
                     mape = Math.abs((meanThr - fit) / meanThr);// this is correct to calculate error coming from real throughput vs model
 
-                 //   ind = -1;
+                    //   ind = -1;
                     if (mInstance.trisMeanThr.get(totTris).size() == binCap) { // we keep inf of last 10 points
-                         cleanOutArraysThr(totTris, pred_meanD, mInstance);// cleans out the closest data to the curr one
+                        cleanOutArraysThr(totTris, pred_meanD, mInstance);// cleans out the closest data to the curr one
 
                     }
 
 
-                 ///  nil   commented  sep 7
+                    ///  nil   commented  sep 7
                     if (mape > 0.1 && variousTris >= 2) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
 // 8 april
 
@@ -203,11 +199,10 @@ public class dataCol implements Runnable {
                         // int tListSize = mInstance.totTrisList.size();
 
 
-
                         mInstance.trisMeanThr.put(totTris, meanThr); // corrrect: should have real throughput for regression and thr param should have predicted distance
                         mInstance.thParamList.put(totTris, Arrays.asList(totTris, pred_meanD, 1.0));
                         mInstance.trisMeanDisk.put(totTris, pred_meanD); //correct: should have predicted value dist => removes from the head (older data) -> to then add to the tail
-                     //   mInstance.trisMeanDiskk.put(totTris, meanDkk);
+                        //   mInstance.trisMeanDiskk.put(totTris, meanDkk);
 
 
                         // if( mape >= 0.1 ){
@@ -218,7 +213,7 @@ public class dataCol implements Runnable {
 
                         for (double curT : mInstance.trisMeanThr.keySet()) {
 
-                          //   this is to calculate the mean of values in the bins
+                            //   this is to calculate the mean of values in the bins
 
                             if (mInstance.trisMeanDisk.get(curT).size() < binCap) {
                                 int index = mInstance.trisMeanDisk.get(curT).size();
@@ -244,9 +239,9 @@ public class dataCol implements Runnable {
                         }
 
 
-        //     @@@@ here we check if we have any record for the
-        //  decimated objects, if yes, we need to check the ratio of decimated itration over added scenarios, we define a rate of 40% to make sure that we have
-           //at least the record for decimated object equal to 40% of the added scenarios
+                        //     @@@@ here we check if we have any record for the
+                        //  decimated objects, if yes, we need to check the ratio of decimated itration over added scenarios, we define a rate of 40% to make sure that we have
+                        //at least the record for decimated object equal to 40% of the added scenarios
 
 
                         int decCount = mInstance.decTris.size();// #iterations of decimated objects
@@ -283,7 +278,6 @@ public class dataCol implements Runnable {
                                 .toArray(double[][]::new);
 
 
-
                         // should have predicted distance
 
                         mLinearRegression regression = new mLinearRegression(thRegParameters, y);
@@ -297,21 +291,20 @@ public class dataCol implements Runnable {
 
 
                         }
-                        thRegParameters=null; // free the storage
-                        y=null;
+                        thRegParameters = null; // free the storage
+                        y = null;
                         copytrisMeanThr.clear();
                         copythParamList.clear();
-
 
 
                         //         }// end of modeling throughput
 
                     }// end of i tris>2
-                  //  nil   commented  sep 7   *
+                    //  nil   commented  sep 7   *
 
 
 //                  get the right throughput after remodeling
-                    predThr = (mInstance.rohT * totTris )+ (mInstance.rohD * pred_meanD) + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
+                    predThr = (mInstance.rohT * totTris) + (mInstance.rohD * pred_meanD) + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
                     predThr = (double) Math.round((double) predThr * 100) / 100;
 
                     mape = Math.abs((meanThr - predThr) / meanThr);
@@ -346,7 +339,6 @@ public class dataCol implements Runnable {
                 writequality();
 
 
-
                 double PRoAR = (double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
                 double PRoAI = (double) Math.round((meanThr / mInstance.des_Thr) * 100) / 100;// should be real
                 double reMsrd = PRoAR / PRoAI;
@@ -372,11 +364,11 @@ public class dataCol implements Runnable {
 //@@ niloo please add test the trained data and check rmse, if it is above 20% , then retrain
 
                     double mape = 0.0;      //  sum of square error
-                    double fit =( mInstance.alphaT *totTris) + (mInstance.alphaD * pred_meanD) + (mInstance.alphaH * predThr )+ mInstance.zeta;// uses predicted modeling  for current period
+                    double fit = (mInstance.alphaT * totTris) + (mInstance.alphaD * pred_meanD) + (mInstance.alphaH * predThr) + mInstance.zeta;// uses predicted modeling  for current period
                     mape = Math.abs((reMsrd - fit) / reMsrd);
 
 
-                  //  /*nill commented  sep 7
+                    //  /*nill commented  sep 7
 
                     if (mape > 0.10 && variousTris >= 2) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
 
@@ -388,7 +380,7 @@ public class dataCol implements Runnable {
                         ListMultimap<Double, Double> copytrisRe = ArrayListMultimap.create(mInstance.trisRe);// take a copy to then fill it for training up to capacity of 10
 
 
-                       // This is to calculate mean of bins for distance, throughput ,...
+                        // This is to calculate mean of bins for distance, throughput ,...
                         for (double curT : mInstance.trisRe.keySet()) {
 
                             if (curT != 0 && mInstance.trisRe.get(curT).size() < binCap) {
@@ -415,12 +407,10 @@ public class dataCol implements Runnable {
                         }// for all the current data
 
 
-
-
                         // for REEE
-             //             @@@@ here we check if we have any record for the
-        //  decimated objects, if yes, we need to check the ratio of decimated iteration over added scenarios, we define a rate of 40% to make sure that we have
-        //   at least the record for decimated object equal to 40% of the added scenarios
+                        //             @@@@ here we check if we have any record for the
+                        //  decimated objects, if yes, we need to check the ratio of decimated iteration over added scenarios, we define a rate of 40% to make sure that we have
+                        //   at least the record for decimated object equal to 40% of the added scenarios
                         // int added=mInstance.trisDec.size();
 
                         //  add the decimated data for throughput modeling too
@@ -458,12 +448,9 @@ public class dataCol implements Runnable {
                                 .toArray();
 
 
-
                         double[][] reRegParameters = copyreParamList.values().stream()
                                 .map(l -> l.stream().mapToDouble(Double::doubleValue).toArray())
                                 .toArray(double[][]::new);
-
-
 
 
                         if (variousTris >= 3) {
@@ -480,18 +467,18 @@ public class dataCol implements Runnable {
 
                         }
 
-                        reRegParameters=null;
-                        RE=null;
+                        reRegParameters = null;
+                        RE = null;
 
                         copytrisRe.clear();
                         copyreParamList.clear();
 
                     }
 
-           //   nil   commented  sep 7
+                    //   nil   commented  sep 7
 
                     // current period
-                    double predRE = mInstance.alphaT *totTris + mInstance.alphaD * pred_meanD + mInstance.alphaH * predThr + mInstance.zeta; // for almost current period
+                    double predRE = mInstance.alphaT * totTris + mInstance.alphaD * pred_meanD + mInstance.alphaH * predThr + mInstance.zeta; // for almost current period
 
 
 // nill added temp
@@ -584,63 +571,51 @@ public class dataCol implements Runnable {
                                 nextTris = mInstance.orgTrisAllobj;
 
 
-
-                            nextTris =  Math.round(nextTris * 100) / 100;
+                            nextTris = Math.round(nextTris * 100) / 100;
                             trainedTris = true;
 
 
+                            //   if (mInstance.trainedTris == true) {
+                            try {
+                                baselineAlg((float) nextTris);
+                                // odraAlg((float) nextTris);
+                                time2 = System.nanoTime() / 1000000;
+                                // long t2 = System.nanoTime() / 1000000;
+                                mInstance.t_loop1 = time2 - time1 - (sleepTime * (objC - 1));
+                                // mInstance.t_loop2 = t2 - t1;
+                                mInstance.lastConscCounter = 0;// we let the effect of change in triangle count stand for at least 4 times by reseting this counter. if you don't reset, by any chance new re might be <08 and then the orda happens again
 
-                         //   if (mInstance.trainedTris == true) {
-                                try {
-
-
-
-                                    odraAlg((float) nextTris);
-                                    time2= System.nanoTime()/1000000;
-                                   // long t2 = System.nanoTime() / 1000000;
-                                    mInstance.t_loop1 = time2 - time1 - (sleepTime * (objC-1) );
-                                   // mInstance.t_loop2 = t2 - t1;
-                                    mInstance.lastConscCounter = 0;// we let the effect of change in triangle count stand for at least 4 times by reseting this counter. if you don't reset, by any chance new re might be <08 and then the orda happens again
-
-                                    if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris) ) // if next tris is lower than total tris we have decimation
-                                        mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
+                                if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
+                                    mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
 
 
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
 
 
-                                algNxtTris = mInstance.total_tris;
-
-
-
-
-
+                            algNxtTris = mInstance.total_tris;
 
 
                         }
 
 
                     }//if
-                    writeRE(reMsrd, predRE, trainedRE, totTris, nextTris,algNxtTris, trainedTris, PRoAR, PRoAI, accmodel, mInstance.orgTrisAllobj, avgq, mInstance.t_loop1);// writes to the file
-
-
-
+                    writeRE(reMsrd, predRE, trainedRE, totTris, nextTris, algNxtTris, trainedTris, PRoAR, PRoAI, accmodel, mInstance.orgTrisAllobj, avgq, mInstance.t_loop1);// writes to the file
 
 
                 }            //  RE modeling and next tris
 
 
-                if( mInstance.trisChanged==true)
-                {  mInstance.cleanedbin=false;
-                    mInstance.trisChanged=false;
+                if (mInstance.trisChanged == true) {
+                    mInstance.cleanedbin = false;
+                    mInstance.trisChanged = false;
 
                 }
 
 
 // heap clean-> memory efficiency
-                if((variousTris % 8==0) && variousTris>2&& mInstance.cleanedbin==false )// every 5x times we check to clear the bins provided that the model is accurate
+                if ((variousTris % 8 == 0) && variousTris > 2 && mInstance.cleanedbin == false)// every 5x times we check to clear the bins provided that the model is accurate
                 {
                     mInstance.reParamList.clear();
                     mInstance.trisMeanDisk.clear();
@@ -651,55 +626,42 @@ public class dataCol implements Runnable {
                     // to start over data collection
 
                     mInstance.decTris.clear();
-                    mInstance.cleanedbin= true;
+                    mInstance.cleanedbin = true;
                 }
 
 
             }// if we have objs on the screen, we start RE model & training
 
 
-
         }   // if Nan
 
-       // else
-           // Log.d("Mean Throughput is", "not accepted");
-
-
-
+        // else
+        // Log.d("Mean Throughput is", "not accepted");
 
 
         mInstance.pred_meanD_cur = meanDkk; // the predicted current_mean_distance for next period is saved here
         mInstance.prevtotTris = totTris;
-       // if(mInstance.trainedTris==false) // we do this if we don't want to run the odra algoritm. this will be done while alg is running otherwise, we won't able to access mainactivity instance in the algorithm
-           // mInstance=null;  // to force it for garbage collection and avoid heap storage limitation
-       // else // we have our algorithm running
-      //  mInstance.trainedTris = false;
-
-
-
-
-
-
-
+        // if(mInstance.trainedTris==false) // we do this if we don't want to run the odra algoritm. this will be done while alg is running otherwise, we won't able to access mainactivity instance in the algorithm
+        // mInstance=null;  // to force it for garbage collection and avoid heap storage limitation
+        // else // we have our algorithm running
+        //  mInstance.trainedTris = false;
 
 
     }//run
 
 
-    public void cleanOutArraysRE(double totTris, double predDis, MainActivity mInstance){
+    public void cleanOutArraysRE(double totTris, double predDis, MainActivity mInstance) {
 
         int index;
-        if ( mInstance.trisMeanDisk.get(totTris).size() == binCap)
-        { // we keep inf of last 10 points
-            double []disArray= mInstance.trisMeanDisk.get(totTris).stream()
+        if (mInstance.trisMeanDisk.get(totTris).size() == binCap) { // we keep inf of last 10 points
+            double[] disArray = mInstance.trisMeanDisk.get(totTris).stream()
                     .mapToDouble(Double::doubleValue)
                     .toArray();
-            index= findClosest(disArray , predDis);// the index of value needed to be deleted
+            index = findClosest(disArray, predDis);// the index of value needed to be deleted
             // since we add if objcount != zero to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
-           if(index<mInstance.trisRe.get(totTris).size() &&  index<mInstance.reParamList.get(totTris).size())
-            {
+            if (index < mInstance.trisRe.get(totTris).size() && index < mInstance.reParamList.get(totTris).size()) {
                 mInstance.trisRe.get(totTris).remove(index);
-            mInstance.reParamList.get(totTris).remove(index);
+                mInstance.reParamList.get(totTris).remove(index);
             }
         }
 
@@ -707,12 +669,10 @@ public class dataCol implements Runnable {
     }
 
 
+    public int cleanOutArraysThr(double totTris, double predDis, MainActivity mInstance) {
 
-
-    public int cleanOutArraysThr(double totTris, double predDis, MainActivity mInstance){
-
-        int index=-1;
-        if ( mInstance.trisMeanDisk.get(totTris).size() == binCap) {
+        int index = -1;
+        if (mInstance.trisMeanDisk.get(totTris).size() == binCap) {
             double[] disArray = mInstance.trisMeanDisk.get(totTris).stream()
                     .mapToDouble(Double::doubleValue)
                     .toArray(); // this has the array of predicted distance
@@ -725,7 +685,7 @@ public class dataCol implements Runnable {
             // mInstance.trisMeanDiskk.get(totTris).remove(index);
         }
 
-        return  index;
+        return index;
     }
 
 
@@ -733,7 +693,7 @@ public class dataCol implements Runnable {
         int idx = 0;
         double dist = Math.abs(arr[0] - target);
 
-        for (int i = 1; i< arr.length; i++) {
+        for (int i = 1; i < arr.length; i++) {
             double cdist = Math.abs(arr[i] - target);
 
             if (cdist < dist) {
@@ -745,76 +705,74 @@ public class dataCol implements Runnable {
         return idx;
     }
 
-    public void writequality(){
+    public void writequality() {
 
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "Quality"+mInstance. fileseries+".csv";
+        String FILEPATH = currentFolder + File.separator + "Quality" + mInstance.fileseries + ".csv";
 
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
-           for (int i=0; i<objC-1; i++) {
-               float curtris = mInstance.renderArray.get(i).orig_tris * mInstance.ratioArray.get(i);
-               float r1 = mInstance.ratioArray.get(i); // current object decimation ratio
+            for (int i = 0; i < objC - 1; i++) {
+                float curtris = mInstance.renderArray.get(i).orig_tris * mInstance.ratioArray.get(i);
+                float r1 = mInstance.ratioArray.get(i); // current object decimation ratio
 //               if (mInstance.renderArray.get(i).fileName.contains("0.6")) // third scenario has ratio 0.6
 //                   r1 = 0.6f; // jsut for scenario3 objects are decimated
 //               else if(mInstance.renderArray.get(i).fileName.contains("0.3")) // sixth scenario has ratio 0.3
 //                   r1=0.3f;
 
 
-               float r2 = ref_ratio * r1; // wanna compare obj level of sensitivity to see if we decimate object more -> to (ref *curr) ratio, would the current object hurt more than the other ones?
-               int indq = mInstance.excelname.indexOf(mInstance.renderArray.get(i).fileName);// search in excel file to find the name of current object and get access to the index of current object
-               // excel file has all information for the degredation model
-               float gamma = mInstance.excel_gamma.get(indq);
-               float a = mInstance.excel_alpha.get(indq);
-               float b = mInstance.excel_betta.get(indq);
-               float c = mInstance.excel_c.get(indq);
-               float d_k = mInstance.renderArray.get(i).return_distance();// current distance
+                float r2 = ref_ratio * r1; // wanna compare obj level of sensitivity to see if we decimate object more -> to (ref *curr) ratio, would the current object hurt more than the other ones?
+                int indq = mInstance.excelname.indexOf(mInstance.renderArray.get(i).fileName);// search in excel file to find the name of current object and get access to the index of current object
+                // excel file has all information for the degredation model
+                float gamma = mInstance.excel_gamma.get(indq);
+                float a = mInstance.excel_alpha.get(indq);
+                float b = mInstance.excel_betta.get(indq);
+                float c = mInstance.excel_c.get(indq);
+                float d_k = mInstance.renderArray.get(i).return_distance();// current distance
 
-               float tmper1 = Calculate_deg_er(a, b, c, d_k, gamma, r1); // deg error for current sit
-               float tmper2 = Calculate_deg_er(a, b, c, d_k, gamma, r2); // deg error for more decimated obj
-
-
+                float tmper1 = Calculate_deg_er(a, b, c, d_k, gamma, r1); // deg error for current sit
+                float tmper2 = Calculate_deg_er(a, b, c, d_k, gamma, r2); // deg error for more decimated obj
 
 
+                float max_nrmd = mInstance.excel_maxd.get(indq);
+                tmper1 = tmper1 / max_nrmd; // normalized
+                tmper2 = tmper2 / max_nrmd;
 
-               float max_nrmd = mInstance.excel_maxd.get(indq);
-               tmper1 = tmper1 / max_nrmd; // normalized
-               tmper2= tmper2 /max_nrmd;
+                if (tmper2 < 0)
+                    tmper2 = 0;
 
-               if (tmper2 < 0)
-                   tmper2 = 0;
-
-               //Qi−Qi,r divided by Ti(1−Rr) = (1-er1) - (1-er2) / ....
-               sensitivity[i] = (abs(tmper2 - tmper1) / (curtris - (ref_ratio * curtris)));
-               tmper1 = (float) (Math.round((float) (tmper1 * 1000))) / 1000;
+                //Qi−Qi,r divided by Ti(1−Rr) = (1-er1) - (1-er2) / ....
+                sensitivity[i] = (abs(tmper2 - tmper1) / (curtris - (ref_ratio * curtris)));
+                tmper1 = (float) (Math.round((float) (tmper1 * 1000))) / 1000;
 
                 StringBuilder sb = new StringBuilder();
                 sb.append(dateFormat.format(new Date()));
                 sb.append(',');
-                sb.append(mInstance.renderArray.get(i).fileName+"_n"+(i+1)+"_d"+(d_k));
+                sb.append(mInstance.renderArray.get(i).fileName + "_n" + (i + 1) + "_d" + (d_k));
                 sb.append(',');
                 sb.append(sensitivity[i]);
                 sb.append(',');
                 sb.append(r1);
                 sb.append(',');
-                sb.append(1-tmper1);
-              //  sb.append(mInstance.tasks.toString());
+                sb.append(1 - tmper1);
+                //  sb.append(mInstance.tasks.toString());
 
                 sb.append('\n');
                 writer.write(sb.toString());
                 System.out.println("done!");
             }
-        }catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
         }
 
     }
-    public void writeThr(double realThr, double predThr, boolean trainedFlag){
+
+    public void writeThr(double realThr, double predThr, boolean trainedFlag) {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
         String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "Throughput"+mInstance. fileseries+".csv";
+        String FILEPATH = currentFolder + File.separator + "Throughput" + mInstance.fileseries + ".csv";
 
 //        StringBuilder sbTaskSave = new StringBuilder();
 //        for (AiItemsViewModel taskView : mInstance.mList) {
@@ -828,17 +786,22 @@ public class dataCol implements Runnable {
 //        }
 
 
-
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
             StringBuilder sb = new StringBuilder();
-            sb.append(dateFormat.format(new Date())); sb.append(',');
-            sb.append(realThr);sb.append(',');
+            sb.append(dateFormat.format(new Date()));
+            sb.append(',');
+            sb.append(realThr);
+            sb.append(',');
             sb.append(predThr);
-            sb.append(',');  sb.append(trainedFlag);
-            sb.append(','); sb.append(mInstance.total_tris);
+            sb.append(',');
+            sb.append(trainedFlag);
+            sb.append(',');
+            sb.append(mInstance.total_tris);
             sb.append(mInstance.tasks.toString());
-            sb.append(','); sb.append(mInstance.des_Thr);
-            sb.append(','); sb.append(mInstance.des_Q);
+            sb.append(',');
+            sb.append(mInstance.des_Thr);
+            sb.append(',');
+            sb.append(mInstance.des_Q);
             sb.append('\n');
             writer.write(sb.toString());
             System.out.println("done!");
@@ -880,28 +843,41 @@ public class dataCol implements Runnable {
 
     // public void writeRE(double realRe, double predRe, boolean trainedFlag,double totT, double nextT, boolean trainedT, double pAR, double pAI){
     public void writeRE(double realRe, double predRe, boolean trainedFlag, double totT, double nextT, double algTris, boolean trainedT,
-                        double pAR, double pAI, boolean accM, double totTris, double avgq, long duration){
+                        double pAR, double pAI, boolean accM, double totTris, double avgq, long duration) {
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
         String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "RE"+mInstance. fileseries+".csv";
+        String FILEPATH = currentFolder + File.separator + "RE" + mInstance.fileseries + ".csv";
 
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
             StringBuilder sb = new StringBuilder();
-            sb.append(dateFormat.format(new Date())); sb.append(',');
-            sb.append(realRe);sb.append(',');
+            sb.append(dateFormat.format(new Date()));
+            sb.append(',');
+            sb.append(realRe);
+            sb.append(',');
             sb.append(predRe);
-            sb.append(',');  sb.append(trainedFlag);
-            sb.append(',');  sb.append(totT);
-            sb.append(',');  sb.append(nextT);
-            sb.append(',');  sb.append(algTris);
-            sb.append(',');  sb.append(trainedT);
-            sb.append(',');  sb.append(pAR);
-            sb.append(',');  sb.append(pAI);
-            sb.append(',');  sb.append(accM);// if both models are accurate
-            sb.append(',');  sb.append(totTris);// if both models are accurate
-            sb.append(',');  sb.append(avgq);
-            sb.append(',');  sb.append(duration);
+            sb.append(',');
+            sb.append(trainedFlag);
+            sb.append(',');
+            sb.append(totT);
+            sb.append(',');
+            sb.append(nextT);
+            sb.append(',');
+            sb.append(algTris);
+            sb.append(',');
+            sb.append(trainedT);
+            sb.append(',');
+            sb.append(pAR);
+            sb.append(',');
+            sb.append(pAI);
+            sb.append(',');
+            sb.append(accM);// if both models are accurate
+            sb.append(',');
+            sb.append(totTris);// if both models are accurate
+            sb.append(',');
+            sb.append(avgq);
+            sb.append(',');
+            sb.append(duration);
             sb.append('\n');
             writer.write(sb.toString());
             System.out.println("done!");
@@ -911,13 +887,11 @@ public class dataCol implements Runnable {
     }
 
 
+    public float calculateMeanQuality() {
 
-    public float calculateMeanQuality( ) {
-
-        float sumQual=0;
-        for (int ind = 0; ind < mInstance.objectCount; ind++)
-        {
-            int i =  mInstance.excelname.indexOf( mInstance.renderArray.get(ind).fileName);
+        float sumQual = 0;
+        for (int ind = 0; ind < mInstance.objectCount; ind++) {
+            int i = mInstance.excelname.indexOf(mInstance.renderArray.get(ind).fileName);
             float gamma = mInstance.excel_gamma.get(i);
             float a = mInstance.excel_alpha.get(i);
             float b = mInstance.excel_betta.get(i);
@@ -934,164 +908,146 @@ public class dataCol implements Runnable {
             float max_nrmd = mInstance.excel_maxd.get(i);
 
             float cur_degerror = deg_error / max_nrmd;
-            float quality= 1- cur_degerror;
-            objquality[ind]=quality;
-            sumQual+=quality;
+            float quality = 1 - cur_degerror;
+            objquality[ind] = quality;
+            sumQual += quality;
 
 
         }
 
 
-        return sumQual/mInstance.objectCount;
-
+        return sumQual / mInstance.objectCount;
 
 
     }
 
-    public float Calculate_deg_er(float a,float b,float creal,float d,float gamma, float r1) {
+    public float Calculate_deg_er(float a, float b, float creal, float d, float gamma, float r1) {
 
         float error;
-        if(r1==1)
-            return  0f;
-        error = (float) (((a * Math.pow(r1,2)) + (b * r1) + creal) / (Math.pow(d , gamma)));
+        if (r1 == 1)
+            return 0f;
+        error = (float) (((a * Math.pow(r1, 2)) + (b * r1) + creal) / (Math.pow(d, gamma)));
         return error;
     }
 
 
-
     float odraAlg(float tUP) throws InterruptedException {
-
-
         candidate_obj = new HashMap<>();
         Map<Integer, Float> sortedcandidate_obj = new HashMap<>();
-        float sum_org_tris = 0; // sum of all tris of the objects o the screen
+        float sum_org_tris = 0; // sum of all triangles of the objects on the screen                                                                                        //T^tot
 
-        for (int ind = 0; ind < mInstance.objectCount; ind++) {
-
-            sum_org_tris += mInstance.renderArray.get(ind).orig_tris;// this will ne used to cal min of tris needed at each row (object) in bellow
-
-
+        for (int ind = 0; ind < mInstance.objectCount; ind++) {                                                                                                            //Line 1: Initialization of S_i, T_i^share, P_i for all objects
+            sum_org_tris += mInstance.renderArray.get(ind).orig_tris;// this will be used to calculate minimum number of triangles needed at each row (object) in below
             float curtris = mInstance.renderArray.get(ind).orig_tris * mInstance.ratioArray.get(ind);
-
-          /* I calculate this in quality function
-           float r1 = mInstance.ratioArray.get(ind); // current object decimation ratio
-            float r2 = ref_ratio * r1; // wanna compare obj level of sensitivity to see if we decimate object more -> to (ref *curr) ratio, would the current object hurt more than the other ones?
-
-            int indq = mInstance.excelname.indexOf(mInstance.renderArray.get(ind).fileName);// search in excel file to find the name of current object and get access to the index of current object
-            // excel file has all information for the degredation model
-            float gamma = mInstance.excel_gamma.get(indq);
-            float a = mInstance.excel_alpha.get(indq);
-            float b = mInstance.excel_betta.get(indq);
-            float c = mInstance.excel_c.get(indq);
-            float d_k = mInstance.renderArray.get(ind).return_distance();// current distance
-
-            float tmper1 = Calculate_deg_er(a, b, c, d_k, gamma, r1); // deg error for current sit
-            float tmper2 = Calculate_deg_er(a, b, c, d_k, gamma, r2); // deg error for more decimated obj
-
-            if (tmper2 < 0)
-                tmper2 = 0;
-
-            //Qi−Qi,r divided by Ti(1−Rr) = (1-er1) - (1-er2) / ....
-            sensitivity[ind] = (abs(tmper2 - tmper1) / (curtris - (ref_ratio * curtris)));*/
-            tris_share[ind] = (curtris / tUP);
-            candidate_obj.put(ind, sensitivity[ind] / tris_share[ind]);
-
-
+            tris_share[ind] = (curtris / tUP);                                                                                                                             //Line 3: T_i^share - Triangle share
+            candidate_obj.put(ind, sensitivity[ind] / tris_share[ind]);                                                                                                 //Line 4: P_i - Priority
         }
-        sortedcandidate_obj = sortByValue(candidate_obj, false); // second arg is for order-> ascending or not? NO
+        sortedcandidate_obj = sortByValue(candidate_obj, false); // second arg is for order-> ascending or not? NO                                                   //Line 5: Sort objects in non-increasing order of Pi
         // Up to here, the candidate objects are known
 
-
         float updated_sum_org_tris = sum_org_tris; // keeps the last value which is sum_org_tris - tris1-tris2-....
-        for (int i : sortedcandidate_obj.keySet()) { // check this gets the candidate object index to calculate min weight
-            float sum_org_tris_minus = updated_sum_org_tris - mInstance.renderArray.get(i).orig_tris; // this is summ of tris for all the objects except the current one
+        for (int i : sortedcandidate_obj.keySet()) {                                                                                                                        //Line 6-9: Determining T_alpha(i)^min for each object
+            // check this gets the candidate object index to calculate min weight
+            float sum_org_tris_minus = updated_sum_org_tris - mInstance.renderArray.get(i).orig_tris; // this is sum of tris for all the objects except the current one
             updated_sum_org_tris = sum_org_tris_minus;
             tMin[i] = coarse_Ratios[coarse_Ratios.length - 1] * sum_org_tris_minus;// minimum tris needs for object i+1 to object n
             ///@@@@ if this line works lonely, delete the extra line for the last object to zero in the alg
-        }
+        }                                                                                                                   //Line 6-9: Determining T_alpha(i)^min for each object
 
         Map.Entry<Integer, Float> entry = sortedcandidate_obj.entrySet().iterator().next();
-        int key = entry.getKey(); // get access to the first key -> to see if it is the first object for bellow code
+        int key = entry.getKey(); // get access to the first key -> to see if it is the first object for below code
 
         int prevInd = 0;
-        for (int i : sortedcandidate_obj.keySet()){  // line 10 i here is equal to alphai -> the obj with largest candidacy
+        for (int i : sortedcandidate_obj.keySet()) {
+            // line 10 i here is equal to alphai -> the obj with largest candidacy                                                                                          //Line 10
             // check this gets the candidate object index to maintain its quality
-            for (int j = 0; j < coarse_Ratios.length; j++) {
-
+            for (int j = 0; j < coarse_Ratios.length; j++) {                                                                                                                //Line 11
                 int indq = mInstance.excelname.indexOf(mInstance.renderArray.get(i).fileName);// search in excel file to find the name of current object and get access to the index of current object
-                float gamma =mInstance. excel_gamma.get(indq);
-                float a =mInstance. excel_alpha.get(indq);
+                float gamma = mInstance.excel_gamma.get(indq);
+                float a = mInstance.excel_alpha.get(indq);
                 float b = mInstance.excel_betta.get(indq);
-                float c =mInstance. excel_c.get(indq);
+                float c = mInstance.excel_c.get(indq);
                 float d_k = mInstance.renderArray.get(i).return_distance();// current distance
                 float max_nrmd = mInstance.excel_maxd.get(indq);
-                float quality = 1 -( Calculate_deg_er(a, b, c, d_k, gamma, coarse_Ratios[j]) / max_nrmd  ); // deg error for current sit
+                float quality = 1 - (Calculate_deg_er(a, b, c, d_k, gamma, coarse_Ratios[j]) / max_nrmd); // deg error for current sit
 
-                if (i == key && tUP >= mInstance.renderArray.get(i).getOrg_tris() * coarse_Ratios[j]) { // the first object in the candidate list
+                if (i == key && tUP >= mInstance.renderArray.get(i).getOrg_tris() * coarse_Ratios[j]) { // the first object in the candidate list                           //Line 15 - 25
                     fProfit[i][j] = quality;// Fα(i),j ←Qα(i),j -> i is alpha i
                     tRemainder[i][j] = tUP - (mInstance.renderArray.get(i).getOrg_tris() * coarse_Ratios[j]);
-                } else //  here is the dynamic programming section
-                    for (int s = 0; s < coarse_Ratios.length; s++) {
-
+                } else {
+                    //  here is the dynamic programming section
+                    for (int s = 0; s < coarse_Ratios.length; s++) {                                                                                                        //Line 19 - 25
                         float f = fProfit[prevInd][s] + quality;
                         float t = tRemainder[prevInd][s] - (mInstance.renderArray.get(i).getOrg_tris() * coarse_Ratios[j]);
                         if (t >= tMin[i] && fProfit[i][j] < f) {
-
                             fProfit[i][j] = f;
                             tRemainder[i][j] = t;
                             track_obj[i][j] = s;
                         }
+                    }                                                                                                                                                       //Line 19 - 25
+                }                                                                                                                                                           //Line 15 - 25
+            } //for j  up to here we reach line 25
+            prevInd = i;
+        } // for i
 
-                    }//
-
-            }//for j  up to here we reach line 25
-            prevInd=i;
-        }// for i
-/// start with object with least priority
-
+        /// start with object with least priority
         sortedcandidate_obj = sortByValue(candidate_obj, true); // to iterate through the list from lowest to highest values
 
-        int lowPobjIndx = sortedcandidate_obj.entrySet().iterator().next().getKey(); // line 26
-        float tmp=fProfit[lowPobjIndx][0];
-        int j=0;
-        for  (int maxindex=1;maxindex<coarse_Ratios.length;maxindex++) // line 27
-            if(fProfit[lowPobjIndx][maxindex]>tmp)// finds the index of coarse-grain ratio with maximum profit
-            {
-                tmp = fProfit[lowPobjIndx][maxindex];
-                j=maxindex;
-            }
+        int lowPobjIndx = sortedcandidate_obj.entrySet().iterator().next().getKey();                                                                                        //Line 26
+        float tmp = fProfit[lowPobjIndx][0];
+        int j = 0;                                                                                                                                                          //Line 27
+        for (int maxindex = 1; maxindex < coarse_Ratios.length; maxindex++)                                                                                                 //Line 27
+            if (fProfit[lowPobjIndx][maxindex] > tmp)// finds the index of coarse-grain ratio with maximum profit                                                           //Line 27
+            {                                                                                                                                                               //Line 27
+                tmp = fProfit[lowPobjIndx][maxindex];                                                                                                                       //Line 27
+                j = maxindex;                                                                                                                                               //Line 27
+            }                                                                                                                                                               //Line 27
 
-
-        for (int i : sortedcandidate_obj.keySet())
-            //if ( mInstance.renderArray.size()>i &&  mInstance.renderArray.get(i)!=null)
-
-            {// to avoid null pointer error
-
-            mInstance.total_tris = mInstance.total_tris - (mInstance.ratioArray.get(i) * mInstance.o_tris.get(i));// total =total -1*objtris
+        for (int i : sortedcandidate_obj.keySet())                                                                                                                          //Line 29 - 35
+        {
+            // to avoid null pointer error
+            mInstance.total_tris = mInstance.total_tris - (mInstance.ratioArray.get(i) * mInstance.o_tris.get(i));                                                          // T^tot -= R_i * objtris
             mInstance.ratioArray.set(i, coarse_Ratios[j]);
-
-
-            mInstance.runOnUiThread(() -> mInstance.renderArray.get(i).decimatedModelRequest(mInstance.ratioArray.get(i), i, false));
-
-            mInstance.total_tris = mInstance.total_tris + (mInstance.ratioArray.get(i) *  mInstance.renderArray.get(i).orig_tris);// total = total + 0.8*objtris
-           // mInstance.trisDec.put(mInstance.total_tris,true);
-
-            j = track_obj[i][j];
-            Thread.sleep(sleepTime);// added to prevent the crash happens while redrawing all the objects at the same time
-
-
-        }
-
-
+            mInstance.runOnUiThread(() -> mInstance.renderArray.get(i).decimatedModelRequest(mInstance.ratioArray.get(i), i, false));                                   //Line 31 & 32
+            mInstance.total_tris = mInstance.total_tris + (mInstance.ratioArray.get(i) * mInstance.renderArray.get(i).orig_tris); // total = total + 0.8*objtris            //Line 30: T^tot += T_alpha(i)^max * R_j
+            // mInstance.trisDec.put(mInstance.total_tris,true);
+            j = track_obj[i][j];                                                                                                                                            //Line 34
+            Thread.sleep(sleepTime); // added to prevent the crash happens while redrawing all the objects at the same time
+        }                                                                                                                                                                   //Line 29 - 35
         return mInstance.total_tris; // this returns the total algorithm triangle count
+    }
 
+    float baselineAlg(float tUP) throws InterruptedException {
+        float avg_obj_tri_count = tUP / mInstance.objectCount;
 
+        mInstance.total_tris = 0;
+        for (int i= 0 ; i < mInstance.objectCount; i++) {
+            float t_i = 0;                                          // object i triangle count
+            float t_i_max = mInstance.renderArray.get(i).orig_tris; // object i max triangle count
+            float R_i = 0;                                          // object i new decimation ratio
+            float R_min_diff = 9999999f;                            // minimum difference between declared decimation ratios and object i's new decimation ratio
 
+            t_i = min(avg_obj_tri_count, t_i_max);
+            R_i = t_i / t_i_max;
+
+            float R_diff = 0;                                       // current ratio difference
+            for (float ratio: coarse_Ratios) {                      // finding closest ratio to objects i's new value
+                R_diff = abs(R_i - ratio);
+                if (R_diff < R_min_diff)
+                    R_i = ratio;
+                R_min_diff = R_diff;
+            }
+            mInstance.ratioArray.set(i, R_i);
+            int finalI = i;
+            mInstance.runOnUiThread(() -> mInstance.renderArray.get(finalI).decimatedModelRequest(mInstance.ratioArray.get(finalI), finalI, false));
+            mInstance.total_tris = mInstance.total_tris + (mInstance.ratioArray.get(i) * mInstance.renderArray.get(i).orig_tris);
+            Thread.sleep(sleepTime);
+        }
+        return mInstance.total_tris;
     }
 
 
-    private static Map<Integer, Float> sortByValue(Map<Integer, Float> unsortMap, final boolean order)
-    {
+    private static Map<Integer, Float> sortByValue(Map<Integer, Float> unsortMap, final boolean order) {
         List<Map.Entry<Integer, Float>> list = new LinkedList<>(unsortMap.entrySet());
 
         // Sorting the list based on values
@@ -1103,8 +1059,6 @@ public class dataCol implements Runnable {
         return list.stream().collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, LinkedHashMap::new));
 
     }
-
-
 
 
 }
