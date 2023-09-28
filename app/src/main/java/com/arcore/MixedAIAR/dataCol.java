@@ -39,7 +39,8 @@ public class dataCol implements Runnable {
     float objquality[];
     float tris_share[];
     Map<Integer, Float> candidate_obj;
-    float[] coarse_Ratios = new float[]{1f, 0.8f, 0.6f, 0.4f, 0.2f, 0.05f};
+    // float[] coarse_Ratios = new float[]{1f, 0.8f, 0.6f, 0.4f, 0.2f, 0.05f};
+    float[] coarse_Ratios = new float[]{1f, 0.9f, 0.8f, 0.7f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f, 0.1f, 0.05f};
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
     float[][] fProfit;
     float[][] tRemainder;
@@ -330,16 +331,47 @@ public class dataCol implements Runnable {
 
                     writeThr(meanThr, predThr, trainedThr);// for the urrent period
 
-
                 } //  throughput model
 
 
                 //******************  RE modeling *************
                 // double sum = 0;
                 double avgq = calculateMeanQuality();
-                writequality();
 
 
+                if (true) {
+                    System.out.println(mInstance.odraAlg);
+                    float nextTris = 999999f;
+                    if (mInstance.odraAlg == "1" || mInstance.odraAlg == "2" || mInstance.odraAlg == "3") {
+                        if (mInstance.odraAlg == "1")
+                            nextTris = 112896f;
+                        else if (mInstance.odraAlg == "2")
+                            nextTris = 56448f;
+                        else
+                            nextTris = 28224f;
+                        try {
+                            odraAlg((float) nextTris);
+                            if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
+                                mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                    } else if (mInstance.odraAlg == "4" || mInstance.odraAlg == "5" || mInstance.odraAlg == "6")
+                        if (mInstance.odraAlg == "4")
+                            nextTris = 112896f;
+                        else if (mInstance.odraAlg == "5")
+                            nextTris = 56448f;
+                        else
+                            nextTris = 28224f;
+                        try {
+                            baselineAlg((float) nextTris);
+                            if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
+                                mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                    writequality(avgq, nextTris, mInstance.total_tris);
+                } else {
                 double PRoAR = (double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
                 double PRoAI = (double) Math.round((meanThr / mInstance.des_Thr) * 100) / 100;// should be real
                 double reMsrd = PRoAR / PRoAI;
@@ -604,9 +636,8 @@ public class dataCol implements Runnable {
                     }//if
                     writeRE(reMsrd, predRE, trainedRE, totTris, nextTris, algNxtTris, trainedTris, PRoAR, PRoAI, accmodel, mInstance.orgTrisAllobj, avgq, mInstance.t_loop1);// writes to the file
 
-
                 }            //  RE modeling and next tris
-
+            }
 
                 if (mInstance.trisChanged == true) {
                     mInstance.cleanedbin = false;
@@ -706,10 +737,10 @@ public class dataCol implements Runnable {
         return idx;
     }
 
-    public void writequality() {
+    public void writequality(double overall_avg_qual, float nextTris, float totTris) {
 
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
         String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "Quality" + mInstance.fileseries + ".csv";
 
@@ -757,6 +788,12 @@ public class dataCol implements Runnable {
                 sb.append(r1);
                 sb.append(',');
                 sb.append(1 - tmper1);
+                sb.append(',');
+                sb.append(overall_avg_qual);
+                sb.append(',');
+                sb.append(nextTris);
+                sb.append(',');
+                sb.append(totTris);
                 //  sb.append(mInstance.tasks.toString());
 
                 sb.append('\n');
@@ -1046,18 +1083,28 @@ public class dataCol implements Runnable {
         for (int i = 0 ; i < mInstance.objectCount; i++) {
             float tri_cnt_i = new_obj_tri_counts[i];                     // object i triangle count
             float tri_max_i = mInstance.renderArray.get(i).orig_tris;    // object i max triangle count
-
-            float R_i = 0;                                               // object i new decimation ratio
-            R_i = tri_cnt_i / tri_max_i;                                 // R_i = T_i / T_i^max             New decimation ratio for object i
-            float R_min_diff = 9999999f;                                 // minimum difference between declared decimation ratios and object i's new decimation ratio
+            float R_i = tri_cnt_i / tri_max_i;                           // object i new decimation ratio
+            float R_min_diff = 9999999f;                                 // minimum difference between declared decimation ratios and object i's new 7decimation ratio
             float R_diff = 0;                                       // current ratio difference
+            float R_i_actual = R_i;
             for (float ratio: coarse_Ratios) {                      // finding closest decimation ratio to objects i's new decimation ratio value
-                R_diff = abs(R_i - ratio);
-                if (R_diff < R_min_diff)
-                    R_i = ratio;
-                    R_min_diff = R_diff;
+                if (ratio > R_i) {
+                } else {
+                    R_diff = R_i - ratio;
+                    if (R_diff < R_min_diff) {
+                        R_i = ratio;
+                        R_min_diff = R_diff;
+                    }
+
+                }
             }
-            mInstance.ratioArray.set(i, R_i);
+            if (R_i == R_i_actual)
+                R_i_actual = mInstance.ratioArray.get(i);
+            else
+                R_i_actual = R_i;
+
+            mInstance.total_tris = mInstance.total_tris - (mInstance.ratioArray.get(i) * mInstance.o_tris.get(i));
+            mInstance.ratioArray.set(i, R_i_actual);
             int finalI = i;
             mInstance.runOnUiThread(() -> mInstance.renderArray.get(finalI).decimatedModelRequest(mInstance.ratioArray.get(finalI), finalI, false));
             mInstance.total_tris = mInstance.total_tris + (mInstance.ratioArray.get(i) * mInstance.renderArray.get(i).orig_tris);

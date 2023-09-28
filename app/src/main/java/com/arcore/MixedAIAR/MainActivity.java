@@ -141,14 +141,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private float ref_ratio = 0.5f;
 
     Map<Integer, Float> candidate_obj;
-    float[] coarse_Ratios = new float[]{1f, 0.8f, 0.6f, 0.4f, 0.2f, 0.05f};
+    // float[] coarse_Ratios = new float[]{1f, 0.8f, 0.6f, 0.4f, 0.2f, 0.05f};
+    float[] coarse_Ratios = new float[]{1f, 0.9f, 0.8f, 0.7f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f, 0.1f, 0.05f};
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
     //  boolean datacol=false;
     boolean trainedTris = false;
     //double nextTris = 0;
     //double algNxtTris = 0;
     long t_loop1 = 0;
-    String odraAlg = "1";
+    public String odraAlg = "1";
     //long t_loop2=0;
     StringBuilder tasks = new StringBuilder();
 
@@ -190,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //private Integer[] objcount = new Integer[]{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 170, 180, 190, 200, 220, 240, 260, 300, 340, 380, 430, 500};
     //private float[] distance_log = new float[]{2.24f,2.0f, 2.24f, 2.83f, 3.61f, 4.47f, 5.39f, 6.32f, 7.28f, 8.25f, 9.22f, 10.2f, 11.18f, 12.17f, 13.15f };
     private Double[] desiredQ = new Double[]{0.7, 0.5, 0.3};
-    private String[] desiredalg = new String[]{"1", "2", "3"};
+    private String[] desiredalg = new String[]{"1", "2", "3", "4", "5", "6"};
     private Double[] desiredThr_weight = new Double[]{1.3, 1.1, 0.9, 0.8, 0.7, 0.6, 0.5};
     private String currentModel = null;
     boolean decAll = true; // older name :referenceObjectSwitchCheck
@@ -981,7 +982,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             sbb.append("decimation_ratio");
             sbb.append(',');
             sbb.append("quality");
-
+            sbb.append(',');
+            sbb.append("Average_Quality");
+            sbb.append(',');
+            sbb.append("algTris");
+            sbb.append(',');
+            sbb.append("nextTris");
             sbb.append('\n');
             writer.write(sbb.toString());
             System.out.println("done!");
@@ -1213,7 +1219,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 // your code here
                 //des_Q= Double.valueOf( qSpinner.getSelectedItem().toString());
                 odraAlg = (qSpinner.getSelectedItem().toString());// yes or no
-
             }
 
             @Override
@@ -1789,11 +1794,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     this.cancel();
                                     //switch off is for motivation- exp2
                                     switchToggleStream.setChecked(false);
-                                     runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+                                     //runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
                                     runOnUiThread(clearButton::callOnClick);
                                     return;
                                 }
-                                 removePhase=true;
+                                 //removePhase=true;
 
 
                                 // last element in the sorted list would be maximum
@@ -1803,7 +1808,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 renderArray.get(objectCount - 1).baseAnchor.select();
                                 runOnUiThread(removeButton::callOnClick);
 
-                                 runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
+                                // runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
                             }
 
 
@@ -1822,7 +1827,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
                                         // just for detailed exp not for exp 4_1
-
+/*
                                         reParamList.clear();
                                         trisMeanDisk.clear();
                                         trisMeanThr.clear();
@@ -1831,13 +1836,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         reParamList.clear();
                                         // to start over data collection
 
-                                        decTris.clear();
+                                        decTris.clear();*/
 
                                         this.cancel();
 
 
                                         //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
-                                           removeTimer.start();
+                                         //  removeTimer.start();
 
                                         return;
                                     }
@@ -2137,13 +2142,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //                               { des_Thr=   (double) (Math.round((double) ( 0.72*throughput* 1000))) / 1000;
 //                               setDesTh=true;}
 //                           }
-
-                            if (odraAlg == "1")// either choose the baseline or odra algorithm
-                                new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
-                            else if (odraAlg == "2")
-                                new baseline_thr(MainActivity.this).run(); // this is throughput wise baseline- periodically checks if throughput goes below the threshold it will decimate all the objects
-                            else
-                                new baseline(MainActivity.this).run(); // this is throughput wise baseline- periodically checks if throughput goes below the threshold it will decimate all the objects
+                            if (true)
+                                new dataCol(MainActivity.this).run();
+                            else {
+                                if (odraAlg == "1")// either choose the baseline or odra algorithm
+                                    new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
+                                else if (odraAlg == "2")
+                                    new baseline_thr(MainActivity.this).run(); // this is throughput wise baseline- periodically checks if throughput goes below the threshold it will decimate all the objects
+                                else
+                                    new baseline(MainActivity.this).run(); // this is throughput wise baseline- periodically checks if throughput goes below the threshold it will decimate all the objects
+                            }
 
                         }
 
