@@ -340,15 +340,25 @@ public class dataCol implements Runnable {
 
 
                 if (true) {
-                    System.out.println(mInstance.odraAlg);
                     float nextTris = 999999f;
-                    if (mInstance.odraAlg == "1" || mInstance.odraAlg == "2" || mInstance.odraAlg == "3") {
-                        if (mInstance.odraAlg == "1")
-                            nextTris = 112896f;
-                        else if (mInstance.odraAlg == "2")
-                            nextTris = 56448f;
+                    if (mInstance.odraAlg.equals("7")) {
+                        try {
+                            baselineAlg((float) nextTris);
+                            if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
+                                mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (mInstance.odraAlg.equals("1") || mInstance.odraAlg.equals("2") || mInstance.odraAlg.equals("3")) {
+                        if (mInstance.odraAlg.equals("1"))
+                            //nextTris = 181358f;
+                            nextTris = 176165f;
+                        else if (mInstance.odraAlg.equals("2"))
+                            //nextTris = 90679f;
+                            nextTris = 88082f;
                         else
-                            nextTris = 28224f;
+                            //nextTris = 22670f;
+                            nextTris = 22022f;
                         try {
                             odraAlg((float) nextTris);
                             if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
@@ -356,21 +366,25 @@ public class dataCol implements Runnable {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                    } else if (mInstance.odraAlg == "4" || mInstance.odraAlg == "5" || mInstance.odraAlg == "6")
-                        if (mInstance.odraAlg == "4")
-                            nextTris = 112896f;
-                        else if (mInstance.odraAlg == "5")
-                            nextTris = 56448f;
+                    } else if (mInstance.odraAlg.equals("4") || mInstance.odraAlg.equals("5") || mInstance.odraAlg.equals("6")) {
+                        if (mInstance.odraAlg.equals("4"))
+                            //nextTris = 181358f;
+                            nextTris = 176165f;
+                        else if (mInstance.odraAlg.equals("5"))
+                            //nextTris = 90679f;
+                            nextTris = 88082f;
                         else
-                            nextTris = 28224f;
+                            //nextTris = 22670f;
+                            nextTris = 22022f;
                         try {
                             baselineAlg((float) nextTris);
                             if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
                                 mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                    writequality(avgq, nextTris, mInstance.total_tris);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    writequality(avgq, nextTris, mInstance.total_tris, mInstance.odraAlg);
                 } else {
                 double PRoAR = (double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
                 double PRoAI = (double) Math.round((meanThr / mInstance.des_Thr) * 100) / 100;// should be real
@@ -737,7 +751,7 @@ public class dataCol implements Runnable {
         return idx;
     }
 
-    public void writequality(double overall_avg_qual, float nextTris, float totTris) {
+    public void writequality(double overall_avg_qual, float nextTris, float totTris, String test_t) {
 
 
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
@@ -794,6 +808,8 @@ public class dataCol implements Runnable {
                 sb.append(nextTris);
                 sb.append(',');
                 sb.append(totTris);
+                sb.append(',');
+                sb.append(test_t);
                 //  sb.append(mInstance.tasks.toString());
 
                 sb.append('\n');
@@ -1078,7 +1094,7 @@ public class dataCol implements Runnable {
                     new_obj_tri_counts[i] += avg_obj_tri_count;
                 }
             }
-        } while (current_total_tris > 0f);
+        } while (current_total_tris > 0f && tot_num_objects > 0);
 
         for (int i = 0 ; i < mInstance.objectCount; i++) {
             float tri_cnt_i = new_obj_tri_counts[i];                     // object i triangle count
@@ -1095,7 +1111,6 @@ public class dataCol implements Runnable {
                         R_i = ratio;
                         R_min_diff = R_diff;
                     }
-
                 }
             }
             if (R_i == R_i_actual)

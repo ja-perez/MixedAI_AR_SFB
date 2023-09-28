@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //private Integer[] objcount = new Integer[]{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 170, 180, 190, 200, 220, 240, 260, 300, 340, 380, 430, 500};
     //private float[] distance_log = new float[]{2.24f,2.0f, 2.24f, 2.83f, 3.61f, 4.47f, 5.39f, 6.32f, 7.28f, 8.25f, 9.22f, 10.2f, 11.18f, 12.17f, 13.15f };
     private Double[] desiredQ = new Double[]{0.7, 0.5, 0.3};
-    private String[] desiredalg = new String[]{"1", "2", "3", "4", "5", "6"};
+    private String[] desiredalg = new String[]{"1", "2", "3", "4", "5", "6", "7"};
     private Double[] desiredThr_weight = new Double[]{1.3, 1.1, 0.9, 0.8, 0.7, 0.6, 0.5};
     private String currentModel = null;
     boolean decAll = true; // older name :referenceObjectSwitchCheck
@@ -211,11 +211,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 24000;
+    // private int scenarioTickLength = 24000;
+    private int scenarioTickLength = 1000;
     //private int removalTickLength = 25000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
-    private int taskConfigTickLength = 30000;
+    private int taskConfigTickLength = 1000;
+//    private int taskConfigTickLength = 30000;
     private int pauseLength = 10000;
 
     double thr_factor = 0.6;
@@ -988,6 +990,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             sbb.append("algTris");
             sbb.append(',');
             sbb.append("nextTris");
+            sbb.append(',');
+            sbb.append("testType");
             sbb.append('\n');
             writer.write(sbb.toString());
             System.out.println("done!");
@@ -1862,7 +1866,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);//
 
 
-                                     Toast.makeText(MainActivity.this, String.format("Model: %s\nPos: (%f, %f)", currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
+                                     // Toast.makeText(MainActivity.this, String.format("Model: %s\nPos: (%f, %f)", currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
 
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -1916,14 +1920,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         i[0]++;
                                         textNumOfAiTasks.setText(String.format("%d", i[0]));
 //
-                                          Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
+                                          //Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
 
                                         record = taskBr.readLine();
 
                                     }
 
                                     if (record == null) {// this is to immidiately start the AI tasks
-                                             Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+                                             //Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
                                         switchToggleStream.setChecked(true);
                                         startObject[0] = true; // to make sure if we have ML tasks running
                                         for (AiItemsViewModel taskView : mList) {
@@ -1976,10 +1980,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 scenePrintWriter.write(sbSceneSave.toString());
                 scenarioSelectAdapter.add((numSaved + 1) + File.separator + "scenario" + (numSaved + 1) + ".csv");
 
-                Toast.makeText(MainActivity.this, String.format("Saved %d model placement(s)", objectCount), Toast.LENGTH_LONG).show();
+                //Toast.makeText(MainActivity.this, String.format("Saved %d model placement(s)", objectCount), Toast.LENGTH_LONG).show();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
             }
 
             String taskFilepath = saveDir + File.separator + "config" + (numSaved + 1) + ".csv";
@@ -2003,10 +2007,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 taskPrintWriter.write(sbTaskSave.toString());
                 taskConfigSelectAdapter.add((numSaved + 1) + File.separator + "config" + (numSaved + 1) + ".csv");
 
-                Toast.makeText(MainActivity.this, String.format("Saved %d AI task config(s)", mList.size()), Toast.LENGTH_LONG).show();
+                //Toast.makeText(MainActivity.this, String.format("Saved %d AI task config(s)", mList.size()), Toast.LENGTH_LONG).show();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+                //Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
             }
         });
 
