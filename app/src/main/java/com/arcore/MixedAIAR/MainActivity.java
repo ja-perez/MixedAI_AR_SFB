@@ -142,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     Map<Integer, Float> candidate_obj;
     // float[] coarse_Ratios = new float[]{1f, 0.8f, 0.6f, 0.4f, 0.2f, 0.05f};
-    float[] coarse_Ratios = new float[]{1f, 0.9f, 0.8f, 0.7f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f, 0.1f, 0.05f};
+    float[] coarse_Ratios = new float[]{1f, 0.8f, 0.7f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f};
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
     //  boolean datacol=false;
     boolean trainedTris = false;

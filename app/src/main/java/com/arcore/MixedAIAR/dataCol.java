@@ -40,7 +40,7 @@ public class dataCol implements Runnable {
     float tris_share[];
     Map<Integer, Float> candidate_obj;
     // float[] coarse_Ratios = new float[]{1f, 0.8f, 0.6f, 0.4f, 0.2f, 0.05f};
-    float[] coarse_Ratios = new float[]{1f, 0.9f, 0.8f, 0.7f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f, 0.1f, 0.05f};
+    float[] coarse_Ratios = new float[]{1f, 0.8f, 0.7f, 0.6f, 0.5f, 0.4f, 0.3f, 0.2f};
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
     float[][] fProfit;
     float[][] tRemainder;
@@ -351,14 +351,11 @@ public class dataCol implements Runnable {
                         }
                     } else if (mInstance.odraAlg.equals("1") || mInstance.odraAlg.equals("2") || mInstance.odraAlg.equals("3")) {
                         if (mInstance.odraAlg.equals("1"))
-                            //nextTris = 181358f;
-                            nextTris = 176165f;
+                            nextTris = 183858f;
                         else if (mInstance.odraAlg.equals("2"))
-                            //nextTris = 90679f;
-                            nextTris = 88082f;
+                            nextTris = 115044f;
                         else
-                            //nextTris = 22670f;
-                            nextTris = 22022f;
+                            nextTris = 88082f;
                         try {
                             odraAlg((float) nextTris);
                             if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
@@ -368,14 +365,11 @@ public class dataCol implements Runnable {
                             }
                     } else if (mInstance.odraAlg.equals("4") || mInstance.odraAlg.equals("5") || mInstance.odraAlg.equals("6")) {
                         if (mInstance.odraAlg.equals("4"))
-                            //nextTris = 181358f;
-                            nextTris = 176165f;
+                            nextTris = 183858f;
                         else if (mInstance.odraAlg.equals("5"))
-                            //nextTris = 90679f;
-                            nextTris = 88082f;
+                            nextTris = 115044f;
                         else
-                            //nextTris = 22670f;
-                            nextTris = 22022f;
+                            nextTris = 88082f;
                         try {
                             baselineAlg((float) nextTris);
                             if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
@@ -1086,10 +1080,14 @@ public class dataCol implements Runnable {
                 float obj_curr_tri_count = new_obj_tri_counts[i];
                 if (obj_curr_tri_count == obj_tri_max) {        // Object triangle count is full
                     // do nothing
-                } else if (avg_obj_tri_count >= obj_tri_max){   // Avg triangle count will fill current object
+                /*} else if (avg_obj_tri_count >= obj_tri_max){   // Avg triangle count will fill current object
                     new_obj_tri_counts[i] += obj_tri_max;
                     tot_num_objects -= 1;
-                    current_total_tris += avg_obj_tri_count - obj_tri_max;
+                    current_total_tris += avg_obj_tri_count - obj_tri_max; */
+                } else if (avg_obj_tri_count + obj_curr_tri_count >= obj_tri_max){
+                    new_obj_tri_counts[i] = obj_tri_max;
+                    tot_num_objects -= 1;
+                    current_total_tris += avg_obj_tri_count  + obj_curr_tri_count - obj_tri_max;
                 } else {                                        // Add avg triangle count to objects new triangle count
                     new_obj_tri_counts[i] += avg_obj_tri_count;
                 }
@@ -1113,10 +1111,7 @@ public class dataCol implements Runnable {
                     }
                 }
             }
-            if (R_i == R_i_actual)
-                R_i_actual = mInstance.ratioArray.get(i);
-            else
-                R_i_actual = R_i;
+            R_i_actual = R_i;
 
             mInstance.total_tris = mInstance.total_tris - (mInstance.ratioArray.get(i) * mInstance.o_tris.get(i));
             mInstance.ratioArray.set(i, R_i_actual);
