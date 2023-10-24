@@ -340,6 +340,27 @@ public class dataCol implements Runnable {
 
 
                 if (true) {
+                    ///////////////////////// Baseline vs. ODTA Testing ////////////////////////////
+                    float nextTris = mInstance.maxTriangles[mInstance.currTris];
+                    String currType = Integer.toString(mInstance.currTris * mInstance.currAlg);
+                    if (mInstance.currAlg == 1) {
+                        try {
+                            odraAlg((float) nextTris);
+                            if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
+                                mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (mInstance.currAlg == -1) {
+                        try {
+                            baselineAlg((float) nextTris);
+                            if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris)) // if next tris is lower than total tris we have decimation
+                                mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    /*
                     float nextTris = 999999f;
                     if (mInstance.odraAlg.equals("7")) {
                         try {
@@ -378,7 +399,8 @@ public class dataCol implements Runnable {
                             e.printStackTrace();
                         }
                     }
-                    writequality(avgq, nextTris, mInstance.total_tris, mInstance.odraAlg);
+                    */
+                    writequality(avgq, nextTris, mInstance.total_tris, currType);
                 } else {
                 double PRoAR = (double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
                 double PRoAI = (double) Math.round((meanThr / mInstance.des_Thr) * 100) / 100;// should be real

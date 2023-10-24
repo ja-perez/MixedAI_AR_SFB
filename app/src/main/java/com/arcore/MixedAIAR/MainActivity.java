@@ -85,6 +85,7 @@ import java.lang.Math;
 import java.io.InputStream;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 
@@ -108,15 +109,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     // private static MainActivity Instance = new MainActivity();
     //private static MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
 
-
-    //    static
-//    {
-//        Instance =
-//    }
-//    public static MainActivity getInstance()
-//    {
-//        return Instance;
-//    }
+    public float[] maxTriangles = new float[]{400000f, 225000f, 176164f, 100000f, 88082f};
+    public int currAlg = -1;
+    public int currTris = 0;
+    public String[] thermalZoneFiles;
+    public String[] cpuDeviceFiles;
+    public long currTimeStamp = 0;
+    public long frameRate = 60;
 
     private boolean isTracking;
     private boolean isHitting;
@@ -149,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //double nextTris = 0;
     //double algNxtTris = 0;
     long t_loop1 = 0;
-    public String odraAlg = "1";
+    public String odraAlg = "0";
     //long t_loop2=0;
     StringBuilder tasks = new StringBuilder();
 
@@ -191,7 +190,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //private Integer[] objcount = new Integer[]{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 170, 180, 190, 200, 220, 240, 260, 300, 340, 380, 430, 500};
     //private float[] distance_log = new float[]{2.24f,2.0f, 2.24f, 2.83f, 3.61f, 4.47f, 5.39f, 6.32f, 7.28f, 8.25f, 9.22f, 10.2f, 11.18f, 12.17f, 13.15f };
     private Double[] desiredQ = new Double[]{0.7, 0.5, 0.3};
-    private String[] desiredalg = new String[]{"1", "2", "3", "4", "5", "6", "7"};
+    private String[] desiredalg = new String[]{"0", "1", "2", "3", "4", "5"};
     private Double[] desiredThr_weight = new Double[]{1.3, 1.1, 0.9, 0.8, 0.7, 0.6, 0.5};
     private String currentModel = null;
     boolean decAll = true; // older name :referenceObjectSwitchCheck
@@ -654,7 +653,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     }
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
@@ -1000,6 +998,53 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             System.out.println(e.getMessage());
         }
 
+        currentFolder = getExternalFilesDir(null).getAbsolutePath();
+        FILEPATH = currentFolder + File.separator + "Performance_Measurements" + fileseries + ".csv";
+        try {
+            thermalZoneFiles = getThermalZoneFiles("/sys/class/thermal/");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            cpuDeviceFiles = getCPUDeviceFiles("/sys/devices/system/cpu/");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+
+           StringBuilder sbb = new StringBuilder();
+           sbb.append("time");
+           sbb.append(',');
+           sbb.append("tot_tris");
+           sbb.append(',');
+           sbb.append("framerate");
+           sbb.append(',');
+           for (String filePath: thermalZoneFiles) {
+               String fileType = getThermalZoneType(filePath);
+               sbb.append(fileType);
+               sbb.append(',');
+           }
+           for (String filePath: cpuDeviceFiles) {
+               String cpuDeviceName = getFileName(filePath);
+               sbb.append(cpuDeviceName);
+               sbb.append(',');
+           }
+           sbb.append("gpu_freq");
+           sbb.append('\n');
+           writer.write(sbb.toString());
+           System.out.println("done!");
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
 
 /*
@@ -1185,30 +1230,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         modelSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelSpinner.setAdapter(modelSelectAdapter);
 
-        //setup the model drop down for desired Q and throughout selection
-//       Spinner qSpinner = (Spinner) findViewById(R.id.alg);
-//        qSpinner.setOnItemSelectedListener(this);
-//      ArrayAdapter<Double> qSelectAdapter = new ArrayAdapter<Double>(MainActivity.this,
-//               android.R.layout.simple_list_item_1, desiredQ);
-//        qSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        qSpinner.setAdapter(qSelectAdapter);
-//
-//
-//        qSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//                                              @Override
-//           public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
-//                                                  // your code here
-//               //des_Q= Double.valueOf( qSpinner.getSelectedItem().toString());
-//                 odraAlg=( qSpinner.getSelectedItem().toString());// yes or no
-//
-//                                              }
-//            @Override
-//            public void onNothingSelected(AdapterView<?> parentView) {
-//                // your code here
-//            }
-//        });
-
-
         Spinner qSpinner = (Spinner) findViewById(R.id.alg);
         qSpinner.setOnItemSelectedListener(this);
         ArrayAdapter<String> qSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
@@ -1223,6 +1244,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                 // your code here
                 //des_Q= Double.valueOf( qSpinner.getSelectedItem().toString());
                 odraAlg = (qSpinner.getSelectedItem().toString());// yes or no
+                switch (odraAlg) {
+                    case "0":
+                        currAlg = -1 * (currAlg);
+                        currTris = 0;
+                        break;
+                    case "1":
+                        currTris = 1;
+                        break;
+                    case "2":
+                        currTris = 2;
+                        break;
+                    case "3":
+                        currTris = 3;
+                        break;
+                    case "4":
+                        currTris = 4;
+                        break;
+                }
             }
 
             @Override
@@ -1764,7 +1803,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             }
         });
 
-
+///////////////////////// LOAD FUNCTION //////////////////////////////////////////////////////
         Button autoPlacementButton = (Button) findViewById(R.id.autoPlacement);
         autoPlacementButton.setOnClickListener(view -> {
             runOnUiThread(clearButton::callOnClick);
@@ -1772,19 +1811,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
             new Thread(() -> {
                 try {
-//
+                    // Load Scenario and Config files
                     String curFolder = getExternalFilesDir(null).getAbsolutePath();
 
                     String taskFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentTaskConfig;
                     InputStreamReader taskInputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(taskFilepath)));
-
                     BufferedReader taskBr = new BufferedReader(taskInputStreamReader);
                     taskBr.readLine();  // column names
-
-                    //  final List<Float>[] sortedlist = new List<Float>[1];
                     String sceneFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentScenario;
                     InputStreamReader sceneInputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(sceneFilepath)));
-
                     BufferedReader sceneBr = new BufferedReader(sceneInputStreamReader);
                     sceneBr.readLine();  // column names
                     tasks = new StringBuilder();
@@ -1798,7 +1833,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     this.cancel();
                                     //switch off is for motivation- exp2
                                     switchToggleStream.setChecked(false);
-                                     //runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
                                     runOnUiThread(clearButton::callOnClick);
                                     return;
                                 }
@@ -1843,8 +1878,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                         decTris.clear();*/
 
                                         this.cancel();
-
-
                                         //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
                                          //  removeTimer.start();
 
@@ -1855,19 +1888,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     currentModel = cols[0];
                                     float xOffset = Float.parseFloat(cols[1]);
                                     float yOffset = Float.parseFloat(cols[2]);
-
-
-//                                      policy = policySpinner.getSelectedItem().toString();
+                                    // policy = polcySpinner.getSelectedItem().toString();
 
                                     modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
                                     float original_tris = excel_tris.get(excelname.indexOf(currentModel));
                                     renderArray.add(objectCount, new decimatedRenderable(currentModel, original_tris));
-                                    // commented temp sep
                                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);//
-
-
                                      // Toast.makeText(MainActivity.this, String.format("Model: %s\nPos: (%f, %f)", currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
-
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -1877,26 +1904,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             public void onFinish() {
                             }
                         };
+
                         final boolean[] startObject = {false};
                         taskTimer = new CountDownTimer(Long.MAX_VALUE, taskConfigTickLength) {
                             @Override
                             public void onTick(long millisUntilFinished) {
-
                                 /// This is when we turned on the AI tasks and waited for 50s. Now we start the object placement
                                 if (startObject[0] == true) {
-
-
                                     this.cancel();
                                     sceneTimer.start();
                                     return;
-
                                 }
 
+                                // this is to run all selected AI tasks -> after this we need to wait for 50 sec and then start the object placement
                                 try {
                                     String record = taskBr.readLine();
-                                    // this is to run all selected AI tasks -> after this we need to waite for 50 sec and them start the object placement
                                     while (record != null) {
-
                                         if (record != null && switchToggleStream.isChecked())// this is to restart the previous AI tasks
                                             switchToggleStream.setChecked(false);
 
@@ -1919,23 +1942,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                                         i[0]++;
                                         textNumOfAiTasks.setText(String.format("%d", i[0]));
-//
-                                          //Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
-
+                                        Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
                                         record = taskBr.readLine();
-
                                     }
 
-                                    if (record == null) {// this is to immidiately start the AI tasks
-                                             //Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+                                    if (record == null) {// this is to immediately start the AI tasks
+                                        Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
                                         switchToggleStream.setChecked(true);
                                         startObject[0] = true; // to make sure if we have ML tasks running
                                         for (AiItemsViewModel taskView : mList) {
                                             tasks.append(",").append(taskView.getModels().get(taskView.getCurrentModel()));}
-
                                     }
-
-
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -1948,10 +1965,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
-                    //  runOnUiThread(() -> Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show());
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show());
                 }
             }).start();
         });
+///////////////////////// LOAD FUNCTION //////////////////////////////////////////////////////
 
         Button savePlacementButton = (Button) findViewById(R.id.savePlacement);
         savePlacementButton.setOnClickListener(view -> {
@@ -2192,138 +2210,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
 
-// starting the second loop : note that sensitivity calculation is just to detect the candidate object for decimation/maintaining triangle count-> it is apart from actual decimation ratio calculation
-   /*
-    void odraAlg(float tUP) {
-
-        candidate_obj = new HashMap<>();
-        Map<Integer, Float> sortedcandidate_obj = new HashMap<>();
-        float sum_org_tris = 0; // sum of all tris of the objects o the screen
-
-        for (int ind = 0; ind < objectCount; ind++) {
-
-            sum_org_tris += renderArray[ind].orig_tris;// this will ne used to cal min of tris needed at each row (object) in bellow
-
-
-            float curtris = renderArray[ind].orig_tris * ratioArray[ind];
-            float r1 = ratioArray[ind]; // current object decimation ratio
-            float r2 = ref_ratio * r1; // wanna compare obj level of sensitivity to see if we decimate object more -> to (ref *curr) ratio, would the current object hurt more than the other ones?
-
-            int indq = excelname.indexOf(renderArray[ind].fileName);// search in excel file to find the name of current object and get access to the index of current object
-            // excel file has all information for the degredation model
-            float gamma = excel_gamma.get(indq);
-            float a = excel_alpha.get(indq);
-            float b = excel_betta.get(indq);
-            float c = excel_c.get(indq);
-            float d_k = renderArray[ind].return_distance();// current distance
-
-            float tmper1 = Calculate_deg_er(a, b, c, d_k, gamma, r1); // deg error for current sit
-            float tmper2 = Calculate_deg_er(a, b, c, d_k, gamma, r2); // deg error for more decimated obj
-
-            if (tmper2 < 0)
-                tmper2 = 0;
-
-            //Qi−Qi,r divided by Ti(1−Rr) = (1-er1) - (1-er2) / ....
-            sensitivity[ind] = (abs(tmper2 - tmper1) / (curtris - (ref_ratio * curtris)));
-            tris_share[ind] = (curtris / tUP);
-            candidate_obj.put(ind, sensitivity[ind] / tris_share[ind]);
-
-
-        }
-        sortedcandidate_obj = sortByValue(candidate_obj, false); // second arg is for order-> ascending or not? NO
-        // Up to here, the candidate objects are known
-
-
-        float updated_sum_org_tris = sum_org_tris; // keeps the last value which is sum_org_tris - tris1-tris2-....
-        for (int i : sortedcandidate_obj.keySet()) { // check this gets the candidate object index to calculate min weight
-            float sum_org_tris_minus = updated_sum_org_tris - renderArray[i].orig_tris; // this is summ of tris for all the objects except the current one
-            updated_sum_org_tris = sum_org_tris_minus;
-            tMin[i] = coarse_Ratios[coarse_Ratios.length - 1] * sum_org_tris_minus;// minimum tris needs for object i+1 to object n
-            ///@@@@ if this line works lonely, delete the extra line for the last object to zero in the alg
-        }
-
-        Map.Entry<Integer, Float> entry = sortedcandidate_obj.entrySet().iterator().next();
-        int key = entry.getKey(); // get access to the first key -> to see if it is the first object for bellow code
-
-        int prevInd = 0;
-        for (int i : sortedcandidate_obj.keySet()){  // line 10 i here is equal to alphai -> the obj with largest candidacy
-            // check this gets the candidate object index to maintain its quality
-            for (int j = 0; j < coarse_Ratios.length; j++) {
-
-                int indq = excelname.indexOf(renderArray[i].fileName);// search in excel file to find the name of current object and get access to the index of current object
-                float gamma = excel_gamma.get(indq);
-                float a = excel_alpha.get(indq);
-                float b = excel_betta.get(indq);
-                float c = excel_c.get(indq);
-                float d_k = renderArray[i].return_distance();// current distance
-
-                float quality = 1 - Calculate_deg_er(a, b, c, d_k, gamma, coarse_Ratios[j]); // deg error for current sit
-
-                if (i == key && tUP >= renderArray[i].getOrg_tris() * coarse_Ratios[j]) { // the first object in the candidate list
-                    fProfit[i][j] = quality;// Fα(i),j ←Qα(i),j -> i is alpha i
-                    tRemainder[i][j] = tUP - (renderArray[i].getOrg_tris() * coarse_Ratios[j]);
-                } else //  here is the dynamic programming section
-                    for (int s = 0; s < coarse_Ratios.length; s++) {
-
-                        float f = fProfit[prevInd][s] + quality;
-                        float t = tRemainder[prevInd][s] - (renderArray[i].getOrg_tris() * coarse_Ratios[j]);
-                        if (t >= tMin[i] && fProfit[i][j] < f) {
-
-                            fProfit[i][j] = f;
-                            tRemainder[i][j] = t;
-                            track_obj[i][j] = s;
-                        }
-
-                    }//
-
-            }//for j  up to here we reach line 25
-        prevInd=i;
-    }// for i
-/// start with object with least priority
-
-        sortedcandidate_obj = sortByValue(candidate_obj, true); // to iterate through the list from lowest to highest values
-
-        int lowPobjIndx = sortedcandidate_obj.entrySet().iterator().next().getKey(); // line 26
-        float tmp=fProfit[lowPobjIndx][0];
-        int j=0;
-        for  (int maxindex=1;maxindex<coarse_Ratios.length;maxindex++) // line 27
-            if(fProfit[lowPobjIndx][maxindex]>tmp)// finds the index of coarse-grain ratio with maximum profit
-            {
-                tmp = fProfit[lowPobjIndx][maxindex];
-                j=maxindex;
-            }
-
-
-        for (int i : sortedcandidate_obj.keySet()) {
-
-                total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
-                ratioArray[i] = coarse_Ratios[j];
-
-            //
-            //      commented on May 2 2022   ModelRequestManager.getInstance().add(new ModelRequest(cacheArray[id], fileName, percentageReduction, getApplicationContext(), MainActivity.this, id),redraw_direct );
-//April 21 Nill , istead of calling mdelreq, sinc we have already downloaded objs from screen, we can call directly redraw
-
-            try {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        renderArray[i].decimatedModelRequest(ratioArray[i], i, false);
-                    }
-                });
-                Thread.sleep(300);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-                total_tris = total_tris + (ratioArray[i] *  renderArray[i].orig_tris);// total = total + 0.8*objtris
-                j = track_obj[i][j];
-
-        }
-
-
-    }*/
-
-
     private static Map<Integer, Float> sortByValue(Map<Integer, Float> unsortMap, final boolean order) {
         List<Entry<Integer, Float>> list = new LinkedList<>(unsortMap.entrySet());
 
@@ -2427,8 +2313,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         PrintWriter fileOut2 = null;
         PrintStream streamOut2 = null;
 
-
-
         int size = current.size();
       //  errorAnalysis2(size);
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
@@ -2514,7 +2398,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         //   t2.cancel();
         //process2.destroy();
-
 
     }
 
@@ -2739,7 +2622,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private void onUpdate() {
 
-//Nil-april 21 did
+        //Nil-april 21 did
         boolean trackingChanged = updateTracking();
         View contentView = findViewById(android.R.id.content);
         if (trackingChanged) {
@@ -3427,7 +3310,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         // while(frame==null)
         // frame = fragment.getArSceneView().getArFrame();
 
-
         android.graphics.Point pt = getScreenCenter();
         List<HitResult> hits;
         if (frame != null) {
@@ -3483,9 +3365,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     private void placeObject(ArFragment fragment, Anchor anchor, Uri model, baseRenderable renderArrayObj) {
-        ;
-
-
         try {
             CompletableFuture<Void> renderableFuture =
                     ModelRenderable.builder()
@@ -3936,6 +3815,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "GPU_Usage_" + fileseries + ".csv";
+        String ZONEFILEPATH = currentFolder + File.separator + "Performance_Measurements" + fileseries + ".csv";
         Timer t = new Timer();
 
         t.scheduleAtFixedRate(
@@ -3959,11 +3839,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                         }
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+                        SimpleDateFormat zoneDateFormat = new SimpleDateFormat("HH:mm:ss:SSS");
 
                         //dateFormat.format(new Date());
 
                         String current_gpu = null;
                         String current_cpu = null;
+                        String gpuFreq = null;
                         try {
 
                             String[] InstallBusyBoxCmd = new String[]{
@@ -3975,7 +3857,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"); // this is for S10 phone
                             BufferedReader stdInput = new BufferedReader(new
                                     InputStreamReader(process2.getInputStream()));
-// Read the output from the command
+                            // Read the output from the command
                             //System.out.println("Here is the standard output of the command:\n");
                             current_gpu = stdInput.readLine();
                             if (current_gpu != null) {
@@ -3983,34 +3865,38 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 mean_gpu = mean_gpu + Float.parseFloat(separator[0]);
                             }
 
+                            // this is for galaxy note10 - GPU Frequency
+                            process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/clock_mhz"); // this is for S10 phone
+                            BufferedReader reader = new BufferedReader(new
+                                    InputStreamReader(process2.getInputStream()));
+                            // Read the output from the command
+                            String currentGPUFreq = reader.readLine();
+                            if (currentGPUFreq != null) {
+                                // convert to hz
+                                float mhzGPUFreq = Float.parseFloat(currentGPUFreq);
+                                float hzGPUFreq = mhzGPUFreq / 1000;
+                                gpuFreq = Float.toString(hzGPUFreq);
+                            }
 
                             process2 = Runtime.getRuntime().exec("top -s 6"); // this is for S10 phone
                             stdInput = new BufferedReader(new
                                     InputStreamReader(process2.getInputStream()));
 
                             while ((current_cpu = stdInput.readLine()) != null)
-
                                 if (current_cpu.contains("com.arcore.Mix")) {
                                     // PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true));
-
                                     while (current_cpu.contains("  "))
                                         current_cpu = current_cpu.replaceAll("  ", " ");
 
                                     current_cpu = current_cpu.replaceAll(" ", ",");
-
-
                                     break;
-
-
                                 }
 
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
 
-
                         //  String item2 = dateFormat.format(new Date()) + " num_of_tris: " + total_tris + " current_gpu " + mean_gpu + " dis " + dist +  " lastobj "+ filname + objectCount+ "\n";
-
 
                         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
 
@@ -4039,14 +3925,63 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             System.out.println(e.getMessage());
                         }
 
+//                        float averageFrameTime = 0f;
+//                        try {
+//                            List<String> currFrameData = getGFXInfo();
+//                            for (String frameTimeLine: currFrameData) {
+//                                String[] frameTimeValues = frameTimeLine.split(" ");
+//                                float totalFrameTime = 0f;
+//                                for (String timeVal: frameTimeValues) {
+//                                    totalFrameTime += Float.parseFloat(timeVal);
+//                                }
+//                                averageFrameTime += totalFrameTime;
+//                            }
+//                            averageFrameTime /= currFrameData.size();
+//                        } catch (IOException e) {
+//                            e.printStackTrace();
+//                        }
+//                        double currFrameTime = max(16.67, averageFrameTime);
+//                        frameRate = (long) (60 * (1 / (currFrameTime/ 16.67)));
+
+                        try (PrintWriter writer = new PrintWriter(new FileOutputStream(ZONEFILEPATH, true))) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(zoneDateFormat.format(new Date()));
+                            sb.append(',');
+                            sb.append(total_tris);
+                            sb.append(',');
+                            sb.append(frameRate);
+                            sb.append(',');
+                            if (thermalZoneFiles != null) {
+                                for (String filePath: thermalZoneFiles) {
+                                    String currTemp = getThermalZoneTemp(filePath);
+                                    sb.append(currTemp);
+                                    sb.append(',');
+                                }
+                            }
+                            if (cpuDeviceFiles != null) {
+                                for (String filePath: cpuDeviceFiles) {
+                                    String currCPUFreq = getCPUFrequency(filePath);
+                                    sb.append(currCPUFreq);
+                                    sb.append(',');
+                                }
+                            }
+                            sb.append(gpuFreq);
+                            sb.append('\n');
+                            writer.write(sb.toString());
+                        } catch (FileNotFoundException e) {
+                            System.out.println(e.getMessage());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
                         // This is to collect position prediction every 500 ms
-///* nill temporaraly deactivated this
+                        ///* nill temporaraly deactivated this
                         if (objectCount >= 1) { // Nil april 21 -> fixed
 
                             Frame frame = fragment.getArSceneView().getArFrame();//OK
                             while (frame == null)
                                 frame = fragment.getArSceneView().getArFrame();//OK
+                            currTimeStamp = frame.getTimestamp();
 
                             // if (frame != null){
                             ///nill added sep 12 to limit the size of current
@@ -4170,6 +4105,127 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             buttonPopAiTask.setVisibility(View.VISIBLE);
             textNumOfAiTasks.setVisibility(View.VISIBLE);
         }
+    }
+
+    public static String[] getThermalZoneFiles(String thermalDirect) throws IOException, InterruptedException {
+        // thermalDirect - /sys/class/thermal/
+        String listFiles = String.format("ls %s | grep 'thermal_zone'", thermalDirect);
+        Process process = Runtime.getRuntime().exec(new String[] {"sh", "-c", listFiles});
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        String line;
+        List<String> thermalZonePaths = new ArrayList<>();
+        while ((line = reader.readLine()) != null) {
+            String thermalZoneFileName = line;
+            String thermalZoneFilePath = thermalDirect + thermalZoneFileName + '/';
+            // Filter thermal zones to only have cpu, gpu, and battery temps
+            String currZoneType = getThermalZoneType(thermalZoneFilePath);
+            if (currZoneType.contains("cpu") || currZoneType.contains("gpu") ||
+                    currZoneType.contains("camera") || currZoneType.contains("battery")) {
+                thermalZonePaths.add(thermalZoneFilePath);
+            }
+        }
+
+        reader.close();
+        process.waitFor();
+        return thermalZonePaths.toArray(new String[0]);
+    }
+
+    public static String[] getCPUDeviceFiles(String cpuDeviceDirect) throws IOException, InterruptedException {
+        // cpuDeviceDirect - /sys/devices/system/cpu
+        String listFiles = String.format("ls %s | grep 'cpu[0-7]'", cpuDeviceDirect);
+        Process process = Runtime.getRuntime().exec(new String[] {"sh", "-c", listFiles});
+        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+        String line;
+        List<String> cpuDevicePaths = new ArrayList<>();
+        while ((line = reader.readLine()) != null) {
+            String cpuDeviceFileName = line;
+            String cpuDeviceFilePath = cpuDeviceDirect + cpuDeviceFileName + '/';
+            cpuDevicePaths.add(cpuDeviceFilePath);
+        }
+
+        reader.close();
+        process.waitFor();
+        return cpuDevicePaths.toArray(new String[0]);
+    }
+
+    public static String getThermalZoneType(String thermalZonePath) throws IOException {
+        String catThermalZone = String.format("cat " + thermalZonePath + "type");
+        Process process = Runtime.getRuntime().exec(catThermalZone);
+        BufferedReader reader = new BufferedReader(new
+                InputStreamReader(process.getInputStream()));
+        String currentType = reader.readLine();
+        if (currentType != null) {
+            return currentType;
+        }
+        return "default_zone_type";
+    }
+
+    public static String getCPUFrequency(String cpuDevicePath) throws IOException {
+        String cpuDeviceFreq = String.format("cat " + cpuDevicePath + "cpufreq/scaling_cur_freq");
+        Process process = Runtime.getRuntime().exec(cpuDeviceFreq);
+        BufferedReader reader = new BufferedReader(new
+                InputStreamReader(process.getInputStream()));
+        String currDeviceFreq = reader.readLine();
+        if (currDeviceFreq != null) {
+            float tempMFreqValue = Float.parseFloat(currDeviceFreq);
+            float tempFreqValue = (float) (tempMFreqValue / 1000000.0);
+            return Float.toString(tempFreqValue);
+        }
+        return "0";
+    }
+
+    public static String getFileName(String filePath) throws IOException {
+        String[] pathStr = filePath.split("/");
+        int lastNameIndex = pathStr.length - 1;
+        return pathStr[lastNameIndex];
+    }
+
+    public static String getThermalZoneTemp(String thermalZonePath) throws IOException {
+        String catThermalTemp = String.format("cat " + thermalZonePath + "temp");
+        Process process = Runtime.getRuntime().exec(catThermalTemp);
+        BufferedReader reader = new BufferedReader(new
+                InputStreamReader(process.getInputStream()));
+        String currentTemp = reader.readLine();
+        if (currentTemp != null) {
+            // MC : millicelcius
+            int tempMCValue = Integer.parseInt(currentTemp);
+            if (tempMCValue < 0)
+                tempMCValue = 0;
+            int tempCValue = tempMCValue / 1000;
+            return Integer.toString(tempCValue);
+        }
+        return "0";
+    }
+
+    public static List<String> getGFXInfo() throws IOException {
+        String gfxinfoDump = String.format("adb shell dumpsys gfxinfo com.arcore.MixedAIAR framestats");
+        Process process = Runtime.getRuntime().exec(gfxinfoDump);
+        BufferedReader reader = new BufferedReader(new
+                InputStreamReader(process.getInputStream()));
+        String currLine = reader.readLine();
+        String[] histogram = null;
+        int startCollectionFlag = 0;
+        List<String> frameTimeRecords = new ArrayList<String>();
+        while (currLine != null) {
+            String[] currLineValues = currLine.split(" ");
+            if (currLineValues[0].equals("HISTOGRAM:")) {
+                histogram = Arrays.copyOfRange(currLineValues,
+                        1, currLineValues.length - 1);
+            }
+            if (currLine.contains("Draw") && currLine.contains("Prepare")) {
+                startCollectionFlag = 1;
+            }
+            if (startCollectionFlag == 1 && currLine.contains("PROFILEDATA")) {
+                break;
+            }
+            if (startCollectionFlag == 1) {
+                frameTimeRecords.add(currLine);
+            }
+            currLine = reader.readLine();
+        }
+        return frameTimeRecords;
     }
 
 }
