@@ -215,8 +215,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //private int removalTickLength = 25000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
-    private int taskConfigTickLength = 1000;
-//    private int taskConfigTickLength = 30000;
+//    private int taskConfigTickLength = 1000;
+    private int taskConfigTickLength = 15000;
     private int pauseLength = 10000;
 
     double thr_factor = 0.6;
@@ -1036,6 +1036,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                sbb.append(',');
            }
            sbb.append("gpu_freq");
+           sbb.append(',');
+           sbb.append("cpu_util");
+           sbb.append(',');
+           sbb.append("gpu_util");
            sbb.append('\n');
            writer.write(sbb.toString());
            System.out.println("done!");
@@ -1837,7 +1841,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     runOnUiThread(clearButton::callOnClick);
                                     return;
                                 }
-                                 //removePhase=true;
+                                 removePhase=true;
 
 
                                 // last element in the sorted list would be maximum
@@ -1847,7 +1851,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 renderArray.get(objectCount - 1).baseAnchor.select();
                                 runOnUiThread(removeButton::callOnClick);
 
-                                // runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
+                                 runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
                             }
 
 
@@ -1879,7 +1883,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                                         this.cancel();
                                         //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
-                                         //  removeTimer.start();
+                                        removeTimer.start();
 
                                         return;
                                     }
@@ -1903,7 +1907,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             @Override
                             public void onFinish() {
                             }
-                        };
+                        }.start();
 
                         final boolean[] startObject = {false};
                         taskTimer = new CountDownTimer(Long.MAX_VALUE, taskConfigTickLength) {
@@ -1961,7 +1965,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             @Override
                             public void onFinish() {
                             }
-                        }.start();
+                        }; //.start();
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -1989,10 +1993,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         .append("\n");
 
                 android.graphics.Point center = getScreenCenter();
-                for (int i = 0; i < objectCount; ++i) {
-                    sbSceneSave.append(renderArray.get(i).fileName)
-                            .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).x - center.x)
-                            .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).y - center.y)
+                // TESTING: Replaced to automatically save the same 1 obj certain number of times
+//                for (int i = 0; i < objectCount; ++i) {
+//                    sbSceneSave.append(renderArray.get(i).fileName)
+//                            .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).x - center.x)
+//                            .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).y - center.y)
+//                            .append("\n");
+//                }
+                int testObjCounts = 50;
+                for (int i = 0; i < testObjCounts; ++i) {
+                    sbSceneSave.append(renderArray.get(0).fileName)
+                            .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(0).baseAnchor.getWorldPosition()).x - center.x)
+                            .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(0).baseAnchor.getWorldPosition()).y - center.y)
                             .append("\n");
                 }
                 scenePrintWriter.write(sbSceneSave.toString());
@@ -3839,7 +3851,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                         }
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-                        SimpleDateFormat zoneDateFormat = new SimpleDateFormat("HH:mm:ss:SSS");
+                        SimpleDateFormat zoneDateFormat = new SimpleDateFormat("HH:mm:ss");
 
                         //dateFormat.format(new Date());
 
@@ -3866,7 +3878,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             }
 
                             // this is for galaxy note10 - GPU Frequency
-                            process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/clock_mhz"); // this is for S10 phone
+                            process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/clock_mhz"); // this is for note10 phone
                             BufferedReader reader = new BufferedReader(new
                                     InputStreamReader(process2.getInputStream()));
                             // Read the output from the command
@@ -3943,6 +3955,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //                        double currFrameTime = max(16.67, averageFrameTime);
 //                        frameRate = (long) (60 * (1 / (currFrameTime/ 16.67)));
 
+                        List<String> cpu_data;
+                        if (current_cpu != null) {
+                            cpu_data = Arrays.asList(current_cpu.split(","));
+                        } else {
+                            cpu_data = Arrays.asList("0", "0", "0", "0");
+                        }
+                        String cpu_util = cpu_data.get(cpu_data.size() - 4);
+
                         try (PrintWriter writer = new PrintWriter(new FileOutputStream(ZONEFILEPATH, true))) {
                             StringBuilder sb = new StringBuilder();
                             sb.append(zoneDateFormat.format(new Date()));
@@ -3966,6 +3986,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 }
                             }
                             sb.append(gpuFreq);
+                            sb.append(',');
+                            sb.append(cpu_util);
+                            sb.append(',');
+                            sb.append(mean_gpu);
                             sb.append('\n');
                             writer.write(sb.toString());
                         } catch (FileNotFoundException e) {
@@ -4121,7 +4145,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             // Filter thermal zones to only have cpu, gpu, and battery temps
             String currZoneType = getThermalZoneType(thermalZoneFilePath);
             if (currZoneType.contains("cpu") || currZoneType.contains("gpu") ||
-                    currZoneType.contains("camera") || currZoneType.contains("battery")) {
+                    currZoneType.contains("npu")) {
                 thermalZonePaths.add(thermalZoneFilePath);
             }
         }
@@ -4197,35 +4221,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             return Integer.toString(tempCValue);
         }
         return "0";
-    }
-
-    public static List<String> getGFXInfo() throws IOException {
-        String gfxinfoDump = String.format("adb shell dumpsys gfxinfo com.arcore.MixedAIAR framestats");
-        Process process = Runtime.getRuntime().exec(gfxinfoDump);
-        BufferedReader reader = new BufferedReader(new
-                InputStreamReader(process.getInputStream()));
-        String currLine = reader.readLine();
-        String[] histogram = null;
-        int startCollectionFlag = 0;
-        List<String> frameTimeRecords = new ArrayList<String>();
-        while (currLine != null) {
-            String[] currLineValues = currLine.split(" ");
-            if (currLineValues[0].equals("HISTOGRAM:")) {
-                histogram = Arrays.copyOfRange(currLineValues,
-                        1, currLineValues.length - 1);
-            }
-            if (currLine.contains("Draw") && currLine.contains("Prepare")) {
-                startCollectionFlag = 1;
-            }
-            if (startCollectionFlag == 1 && currLine.contains("PROFILEDATA")) {
-                break;
-            }
-            if (startCollectionFlag == 1) {
-                frameTimeRecords.add(currLine);
-            }
-            currLine = reader.readLine();
-        }
-        return frameTimeRecords;
     }
 
 }
