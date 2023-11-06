@@ -109,6 +109,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     // private static MainActivity Instance = new MainActivity();
     //private static MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
 
+    // Javier : Variables for Testing and Data collection
     public float[] maxTriangles = new float[]{400000f, 225000f, 176164f, 100000f, 88082f};
     public int currAlg = -1;
     public int currTris = 0;
@@ -116,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     public String[] cpuDeviceFiles;
     public long currTimeStamp = 0;
     public long frameRate = 60;
+
 
     private boolean isTracking;
     private boolean isHitting;
@@ -211,7 +213,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
     // private int scenarioTickLength = 24000;
-    private int scenarioTickLength = 1000;
+    private int scenarioTickLength = 5000;
     //private int removalTickLength = 25000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
@@ -1000,6 +1002,37 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         currentFolder = getExternalFilesDir(null).getAbsolutePath();
         FILEPATH = currentFolder + File.separator + "Performance_Measurements" + fileseries + ".csv";
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+           StringBuilder sbb = new StringBuilder();
+           sbb.append("time");
+           sbb.append(',');
+           sbb.append("tot_tris");
+           sbb.append(',');
+           sbb.append("cpu_temp");
+           sbb.append(',');
+           sbb.append("gpu_temp");
+           sbb.append(',');
+           sbb.append("npu_temp");
+           sbb.append(',');
+           sbb.append("camera_temp");
+           sbb.append(',');
+           sbb.append("cpu_freq");
+           sbb.append(',');
+           sbb.append("gpu_freq");
+           sbb.append(',');
+           sbb.append("cpu_util");
+           sbb.append(',');
+           sbb.append("gpu_util");
+           sbb.append('\n');
+           writer.write(sbb.toString());
+           System.out.println("done!");
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
+        currentFolder = getExternalFilesDir(null).getAbsolutePath();
+        FILEPATH = currentFolder + File.separator + "Raw_PerformanceData" + fileseries + ".csv";
         try {
             thermalZoneFiles = getThermalZoneFiles("/sys/class/thermal/");
         } catch (IOException e) {
@@ -1018,38 +1051,29 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
 
-           StringBuilder sbb = new StringBuilder();
-           sbb.append("time");
-           sbb.append(',');
-           sbb.append("tot_tris");
-           sbb.append(',');
-           sbb.append("framerate");
-           sbb.append(',');
-           for (String filePath: thermalZoneFiles) {
-               String fileType = getThermalZoneType(filePath);
-               sbb.append(fileType);
-               sbb.append(',');
-           }
-           for (String filePath: cpuDeviceFiles) {
-               String cpuDeviceName = getFileName(filePath);
-               sbb.append(cpuDeviceName);
-               sbb.append(',');
-           }
-           sbb.append("gpu_freq");
-           sbb.append(',');
-           sbb.append("cpu_util");
-           sbb.append(',');
-           sbb.append("gpu_util");
-           sbb.append('\n');
-           writer.write(sbb.toString());
-           System.out.println("done!");
+            StringBuilder sbb = new StringBuilder();
+            sbb.append("time");
+            sbb.append(',');
+            for (String filePath: thermalZoneFiles) {
+                String fileType = getThermalZoneType(filePath);
+                sbb.append(fileType);
+                sbb.append(',');
+            }
+            for (String filePath: cpuDeviceFiles) {
+                String cpuDeviceName = getFileName(filePath);
+                sbb.append(cpuDeviceName);
+                sbb.append(',');
+            }
+            sbb.deleteCharAt(sbb.length() - 1);
+            sbb.append('\n');
+            writer.write(sbb.toString());
+            System.out.println("done!");
 
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
         } catch (IOException e) {
             e.printStackTrace();
         }
-
 
 /*
         currentFolder = getExternalFilesDir(null).getAbsolutePath();
@@ -1837,7 +1861,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                     this.cancel();
                                     //switch off is for motivation- exp2
                                     switchToggleStream.setChecked(false);
-                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+                                    //runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
                                     runOnUiThread(clearButton::callOnClick);
                                     return;
                                 }
@@ -1851,7 +1875,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                                 renderArray.get(objectCount - 1).baseAnchor.select();
                                 runOnUiThread(removeButton::callOnClick);
 
-                                 runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
+//                                 runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
                             }
 
 
@@ -1907,7 +1931,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             @Override
                             public void onFinish() {
                             }
-                        }.start();
+                        }; //.start();
 
                         final boolean[] startObject = {false};
                         taskTimer = new CountDownTimer(Long.MAX_VALUE, taskConfigTickLength) {
@@ -1946,12 +1970,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
                                         i[0]++;
                                         textNumOfAiTasks.setText(String.format("%d", i[0]));
-                                        Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
+                                        //Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
                                         record = taskBr.readLine();
                                     }
 
                                     if (record == null) {// this is to immediately start the AI tasks
-                                        Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+//                                        Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
                                         switchToggleStream.setChecked(true);
                                         startObject[0] = true; // to make sure if we have ML tasks running
                                         for (AiItemsViewModel taskView : mList) {
@@ -1965,7 +1989,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             @Override
                             public void onFinish() {
                             }
-                        }; //.start();
+                        }.start();
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -2000,7 +2024,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //                            .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).y - center.y)
 //                            .append("\n");
 //                }
-                int testObjCounts = 50;
+                int testObjCounts = 35;
                 for (int i = 0; i < testObjCounts; ++i) {
                     sbSceneSave.append(renderArray.get(0).fileName)
                             .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(0).baseAnchor.getWorldPosition()).x - center.x)
@@ -3828,6 +3852,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "GPU_Usage_" + fileseries + ".csv";
         String ZONEFILEPATH = currentFolder + File.separator + "Performance_Measurements" + fileseries + ".csv";
+        String RAWFILEPATH = currentFolder + File.separator + "Raw_PerformanceData" + fileseries + ".csv";
         Timer t = new Timer();
 
         t.scheduleAtFixedRate(
@@ -3937,24 +3962,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             System.out.println(e.getMessage());
                         }
 
-//                        float averageFrameTime = 0f;
-//                        try {
-//                            List<String> currFrameData = getGFXInfo();
-//                            for (String frameTimeLine: currFrameData) {
-//                                String[] frameTimeValues = frameTimeLine.split(" ");
-//                                float totalFrameTime = 0f;
-//                                for (String timeVal: frameTimeValues) {
-//                                    totalFrameTime += Float.parseFloat(timeVal);
-//                                }
-//                                averageFrameTime += totalFrameTime;
-//                            }
-//                            averageFrameTime /= currFrameData.size();
-//                        } catch (IOException e) {
-//                            e.printStackTrace();
-//                        }
-//                        double currFrameTime = max(16.67, averageFrameTime);
-//                        frameRate = (long) (60 * (1 / (currFrameTime/ 16.67)));
-
                         List<String> cpu_data;
                         if (current_cpu != null) {
                             cpu_data = Arrays.asList(current_cpu.split(","));
@@ -3962,29 +3969,88 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             cpu_data = Arrays.asList("0", "0", "0", "0");
                         }
                         String cpu_util = cpu_data.get(cpu_data.size() - 4);
+                        float avgCPUTemp = 0f;
+                        int cpuTempDevices = 0;
+                        float avgGPUTemp = 0f;
+                        int gpuTempDevices = 0;
+                        float avgNPUTemp = 0f;
+                        int npuTempDevices = 0;
+                        float avgCamTemp = 0f;
+                        int camTempDevices = 0;
+                        float avgCPUFreq = 0f;
+                        try (PrintWriter writer = new PrintWriter(new FileOutputStream(RAWFILEPATH, true))) {
+                            StringBuilder sb = new StringBuilder();
+                            sb.append(zoneDateFormat.format(new Date()));
+                            sb.append(',');
+                            if (thermalZoneFiles != null) {
+                                for (String filePath: thermalZoneFiles) {
+                                    String currType = getThermalZoneType(filePath);
+                                    String currTemp = getThermalZoneTemp(filePath);
+                                    if (currType.contains("cpu")) {
+                                        avgCPUTemp += Float.parseFloat(currTemp);
+                                        cpuTempDevices++;
+                                    } else if (currType.contains("gpu")) {
+                                        avgGPUTemp += Float.parseFloat(currTemp);
+                                        gpuTempDevices++;
+                                    } else if (currType.contains("npu")) {
+                                        avgNPUTemp += Float.parseFloat(currTemp);
+                                        npuTempDevices++;
+                                    } else if (currType.contains("camera")) {
+                                        avgCamTemp += Float.parseFloat(currTemp);
+                                        camTempDevices++;
+                                    }
+                                    sb.append(currTemp);
+                                    sb.append(',');
+                                }
+                            }
+                            if (cpuTempDevices == 0) cpuTempDevices = 1;
+                            if (gpuTempDevices == 0) gpuTempDevices = 1;
+                            if (npuTempDevices == 0) npuTempDevices = 1;
+                            if (camTempDevices == 0) camTempDevices = 1;
+                            avgCPUTemp /= cpuTempDevices;
+                            avgGPUTemp /= gpuTempDevices;
+                            avgNPUTemp /= npuTempDevices;
+                            avgCamTemp /= camTempDevices;
+                            if (cpuDeviceFiles != null) {
+                                for (String filePath: cpuDeviceFiles) {
+                                    String currCPUFreq = getCPUFrequency(filePath);
+                                    avgCPUFreq += Float.parseFloat(currCPUFreq);
+                                    sb.append(currCPUFreq);
+                                    sb.append(',');
+                                }
+                                int cpuDevices = cpuDeviceFiles.length;
+                                avgCPUFreq /= cpuDevices;
+                            }
+                            sb.deleteCharAt(sb.length() - 1);
+                            sb.append('\n');
+                            writer.write(sb.toString());
+                        } catch (FileNotFoundException e) {
+                            System.out.println(e.getMessage());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
 
+                        String strCPUTemp = Float.toString(avgCPUTemp);
+                        String strGPUTemp = Float.toString(avgGPUTemp);
+                        String strNPUTemp = Float.toString(avgNPUTemp);
+                        String strCamTemp = Float.toString(avgCamTemp);
+                        String strCPUFreq= Float.toString(avgCPUFreq);
                         try (PrintWriter writer = new PrintWriter(new FileOutputStream(ZONEFILEPATH, true))) {
                             StringBuilder sb = new StringBuilder();
                             sb.append(zoneDateFormat.format(new Date()));
                             sb.append(',');
                             sb.append(total_tris);
                             sb.append(',');
-                            sb.append(frameRate);
+                            sb.append(strCPUTemp);
                             sb.append(',');
-                            if (thermalZoneFiles != null) {
-                                for (String filePath: thermalZoneFiles) {
-                                    String currTemp = getThermalZoneTemp(filePath);
-                                    sb.append(currTemp);
-                                    sb.append(',');
-                                }
-                            }
-                            if (cpuDeviceFiles != null) {
-                                for (String filePath: cpuDeviceFiles) {
-                                    String currCPUFreq = getCPUFrequency(filePath);
-                                    sb.append(currCPUFreq);
-                                    sb.append(',');
-                                }
-                            }
+                            sb.append(strGPUTemp);
+                            sb.append(',');
+                            sb.append(strNPUTemp);
+                            sb.append(',');
+                            sb.append(strCamTemp);
+                            sb.append(',');
+                            sb.append(strCPUFreq);
+                            sb.append(',');
                             sb.append(gpuFreq);
                             sb.append(',');
                             sb.append(cpu_util);
@@ -3994,9 +4060,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             writer.write(sb.toString());
                         } catch (FileNotFoundException e) {
                             System.out.println(e.getMessage());
-                        } catch (IOException e) {
-                            e.printStackTrace();
                         }
+
+
 
                         // This is to collect position prediction every 500 ms
                         ///* nill temporaraly deactivated this
@@ -4142,10 +4208,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         while ((line = reader.readLine()) != null) {
             String thermalZoneFileName = line;
             String thermalZoneFilePath = thermalDirect + thermalZoneFileName + '/';
-            // Filter thermal zones to only have cpu, gpu, and battery temps
+            // Filter thermal zones to only have cpu, gpu, npu, and camera temps
             String currZoneType = getThermalZoneType(thermalZoneFilePath);
             if (currZoneType.contains("cpu") || currZoneType.contains("gpu") ||
-                    currZoneType.contains("npu")) {
+                    currZoneType.contains("camera") || currZoneType.contains("npu")) {
                 thermalZonePaths.add(thermalZoneFilePath);
             }
         }

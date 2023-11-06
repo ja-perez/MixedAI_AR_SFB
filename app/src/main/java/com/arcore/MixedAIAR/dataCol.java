@@ -141,7 +141,6 @@ public class dataCol implements Runnable {
             double predThr = (mInstance.rohT * totTris) + (mInstance.rohD * pred_meanD) + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
             predThr = (double) Math.round((double) predThr * 100) / 100;
 
-
 // nill added 8 april
             int ind = -1;
             if (variousTris < 3) { // one object on the screen
@@ -172,11 +171,13 @@ public class dataCol implements Runnable {
             }
 
 
-            if (mInstance.objectCount != 0) {//to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
+            if (mInstance.objectCount != 0) {
+                //to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
 
                 //  int size = mInstance.trisMeanThr.size();// total points regardless of points with similar tris
                 // starting throughput model
-                if (variousTris >= 2) {// at least two points to start modeling
+                if (variousTris >= 2) {
+                    // at least two points to start modeling
 
 
 // checks error of the model after new added model
@@ -193,7 +194,7 @@ public class dataCol implements Runnable {
 
 
                     ///  nil   commented  sep 7
-                    if (mape > 0.1 && variousTris >= 2) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
+                    if (mape > 0.1 && variousTris >= 2 && false) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
 // 8 april
 
                         // if (variousTris >= 2) {
@@ -340,6 +341,9 @@ public class dataCol implements Runnable {
 
 
                 if (true) {
+                    // pass
+                }
+                else if (false) {
                     ///////////////////////// Baseline vs. ODTA Testing ////////////////////////////
                     float nextTris = mInstance.maxTriangles[mInstance.currTris];
                     String currType = Integer.toString(mInstance.currTris * mInstance.currAlg);
@@ -401,7 +405,8 @@ public class dataCol implements Runnable {
                     }
                     */
                     writequality(avgq, nextTris, mInstance.total_tris, currType);
-                } else {
+                }
+                else {
                 double PRoAR = (double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
                 double PRoAI = (double) Math.round((meanThr / mInstance.des_Thr) * 100) / 100;// should be real
                 double reMsrd = PRoAR / PRoAI;
