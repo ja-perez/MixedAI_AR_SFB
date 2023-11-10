@@ -33,6 +33,7 @@ class BitmapCollector(
     var responseTime: Long = 0
     var totalResponseTime: Long = 0
     var numOfTimesExecuted = 0
+    var period = 500
     //
     private val outputPath = activity.getExternalFilesDir(null)
     private val childDirectory = File(outputPath, "data")
@@ -47,7 +48,6 @@ class BitmapCollector(
         totalResponseTime = 0
         numOfTimesExecuted = 0
         end = System.nanoTime()/1000000
-
     }
 
     /**
@@ -105,6 +105,10 @@ class BitmapCollector(
                     classifier.classifyFrame(bitmap)
                     end = System.nanoTime()/1000000
                     classificationTime = end-start
+                    var timeLeftInPeriod = period - classificationTime
+                    if (timeLeftInPeriod > 0) {
+                        Thread.sleep(timeLeftInPeriod)
+                    }
                     responseTime=overhead+classificationTime
                     numOfTimesExecuted++
                     totalResponseTime+=responseTime

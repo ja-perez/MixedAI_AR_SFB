@@ -572,10 +572,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //            {
 //                Frame frame = fragment.getArSceneView().getArFrame();
 //
-//                float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
+//            return dist;
 //
 //
-//            }
+//        }
+//
+//
+//        public float return_distance_predicted(float px, float pz) {
+//
+//            // Frame frame = fragment.getArSceneView().getArFrame();
+//
+//            float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - px), 2) + Math.pow((baseAnchor.getWorldPosition().z - pz), 2)));
+//
+//            dist = (float) (Math.round((float) (dist * 100))) / 100;
+//            return dist;
+//
 //        }
 
         public float return_distance() {
@@ -896,109 +907,109 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         }
 
 
-        currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        FILEPATH = currentFolder + File.separator + "Throughput" + fileseries + ".csv";
+//        currentFolder = getExternalFilesDir(null).getAbsolutePath();
+//        FILEPATH = currentFolder + File.separator + "Throughput" + fileseries + ".csv";
+//
+//
+//        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+//
+//            StringBuilder sbb = new StringBuilder();
+//            sbb.append("time");
+//            sbb.append(',');
+//            sbb.append("thr_Real");
+//            sbb.append(',');
+//            sbb.append("thr_pred");
+//            sbb.append(',');
+//            sbb.append("trainedThr"); //sbb.append(',');  sbb.append("serv_req");
+//            sbb.append(',');
+//            sbb.append("Tris");
+//            sbb.append(',');
+//            sbb.append("Models");
+//            sbb.append(',');
+//            sbb.append("des_Thr");
+//            sbb.append(',');
+//            sbb.append("des_Q");
+//            sbb.append('\n');
+//            writer.write(sbb.toString());
+//            System.out.println("done!");
+//
+//        } catch (FileNotFoundException e) {
+//            System.out.println(e.getMessage());
+//        }
 
 
-        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
-
-            StringBuilder sbb = new StringBuilder();
-            sbb.append("time");
-            sbb.append(',');
-            sbb.append("thr_Real");
-            sbb.append(',');
-            sbb.append("thr_pred");
-            sbb.append(',');
-            sbb.append("trainedThr"); //sbb.append(',');  sbb.append("serv_req");
-            sbb.append(',');
-            sbb.append("Tris");
-            sbb.append(',');
-            sbb.append("Models");
-            sbb.append(',');
-            sbb.append("des_Thr");
-            sbb.append(',');
-            sbb.append("des_Q");
-            sbb.append('\n');
-            writer.write(sbb.toString());
-            System.out.println("done!");
-
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
-
-
-        currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        FILEPATH = currentFolder + File.separator + "RE" + fileseries + ".csv";
-
-        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
-
-            StringBuilder sbb = new StringBuilder();
-            sbb.append("time");
-            sbb.append(',');
-            sbb.append("re_Real");
-            sbb.append(',');
-            sbb.append("re_pred");
-            sbb.append(',');
-            sbb.append("trainedRe");
-            sbb.append(',');
-            sbb.append("curTris");
-            sbb.append(',');
-            sbb.append("nextTris");
-            sbb.append(',');
-            sbb.append("Algorithm_Tris");
-            sbb.append(',');
-            sbb.append("Recalculated Tris");
-            sbb.append(',');
-            sbb.append("pAR");
-            sbb.append(',');
-            sbb.append("pAI");
-            sbb.append(',');
-            sbb.append("TwoModels_Accuracy");
-            sbb.append(',');
-            sbb.append("tot_tris");
-            sbb.append(',');
-            sbb.append("Average_Quality");
-            sbb.append(',');
-            sbb.append("Algorithm_Duration");
-            sbb.append('\n');
-            writer.write(sbb.toString());
-            System.out.println("done!");
-
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
+//        currentFolder = getExternalFilesDir(null).getAbsolutePath();
+//        FILEPATH = currentFolder + File.separator + "RE" + fileseries + ".csv";
+//
+//        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+//
+//            StringBuilder sbb = new StringBuilder();
+//            sbb.append("time");
+//            sbb.append(',');
+//            sbb.append("re_Real");
+//            sbb.append(',');
+//            sbb.append("re_pred");
+//            sbb.append(',');
+//            sbb.append("trainedRe");
+//            sbb.append(',');
+//            sbb.append("curTris");
+//            sbb.append(',');
+//            sbb.append("nextTris");
+//            sbb.append(',');
+//            sbb.append("Algorithm_Tris");
+//            sbb.append(',');
+//            sbb.append("Recalculated Tris");
+//            sbb.append(',');
+//            sbb.append("pAR");
+//            sbb.append(',');
+//            sbb.append("pAI");
+//            sbb.append(',');
+//            sbb.append("TwoModels_Accuracy");
+//            sbb.append(',');
+//            sbb.append("tot_tris");
+//            sbb.append(',');
+//            sbb.append("Average_Quality");
+//            sbb.append(',');
+//            sbb.append("Algorithm_Duration");
+//            sbb.append('\n');
+//            writer.write(sbb.toString());
+//            System.out.println("done!");
+//
+//        } catch (FileNotFoundException e) {
+//            System.out.println(e.getMessage());
+//        }
 
 
-        currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        FILEPATH = currentFolder + File.separator + "Quality" + fileseries + ".csv";
-
-        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
-
-            StringBuilder sbb = new StringBuilder();
-            sbb.append("time");
-            sbb.append(',');
-            sbb.append("objectname");
-            sbb.append(',');
-            sbb.append("sensitivity");
-            sbb.append(',');
-            sbb.append("decimation_ratio");
-            sbb.append(',');
-            sbb.append("quality");
-            sbb.append(',');
-            sbb.append("Average_Quality");
-            sbb.append(',');
-            sbb.append("algTris");
-            sbb.append(',');
-            sbb.append("nextTris");
-            sbb.append(',');
-            sbb.append("testType");
-            sbb.append('\n');
-            writer.write(sbb.toString());
-            System.out.println("done!");
-
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
+//        currentFolder = getExternalFilesDir(null).getAbsolutePath();
+//        FILEPATH = currentFolder + File.separator + "Quality" + fileseries + ".csv";
+//
+//        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+//
+//            StringBuilder sbb = new StringBuilder();
+//            sbb.append("time");
+//            sbb.append(',');
+//            sbb.append("objectname");
+//            sbb.append(',');
+//            sbb.append("sensitivity");
+//            sbb.append(',');
+//            sbb.append("decimation_ratio");
+//            sbb.append(',');
+//            sbb.append("quality");
+//            sbb.append(',');
+//            sbb.append("Average_Quality");
+//            sbb.append(',');
+//            sbb.append("algTris");
+//            sbb.append(',');
+//            sbb.append("nextTris");
+//            sbb.append(',');
+//            sbb.append("testType");
+//            sbb.append('\n');
+//            writer.write(sbb.toString());
+//            System.out.println("done!");
+//
+//        } catch (FileNotFoundException e) {
+//            System.out.println(e.getMessage());
+//        }
 
         currentFolder = getExternalFilesDir(null).getAbsolutePath();
         FILEPATH = currentFolder + File.separator + "Performance_Measurements" + fileseries + ".csv";
@@ -1006,15 +1017,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
            StringBuilder sbb = new StringBuilder();
            sbb.append("time");
            sbb.append(',');
-           sbb.append("tot_tris");
+           sbb.append("throughput");
            sbb.append(',');
            sbb.append("cpu_temp");
            sbb.append(',');
            sbb.append("gpu_temp");
            sbb.append(',');
            sbb.append("npu_temp");
-           sbb.append(',');
-           sbb.append("camera_temp");
            sbb.append(',');
            sbb.append("cpu_freq");
            sbb.append(',');
@@ -1115,27 +1124,27 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 */
 
-        try (PrintWriter writer = new PrintWriter(new FileOutputStream(currentFolder + File.separator + "Response_t.csv", false))) {
-
-            StringBuilder sbb2 = new StringBuilder();
-            sbb2.append("time1");// sbb2.append(','); //sbb2.append("label");
-            sbb2.append(',');
-            sbb2.append("device"); // sbb2.append(','); sbb2.append( "accuracy" );
-            sbb2.append(',');
-            sbb2.append("duration");
-            sbb2.append(',');
-            sbb2.append("requests");
-            sbb2.append(',');
-            sbb2.append("model, iteration");
-
-            // String item2 = dateFormat.format(new Date()) + " "+label_accu+ " time " + duration + " ms" + " requests " + requests + " model " + model;
-
-            sbb2.append('\n');
-            writer.write(sbb2.toString());
-            System.out.println("done!");
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
+//        try (PrintWriter writer = new PrintWriter(new FileOutputStream(currentFolder + File.separator + "Response_t.csv", false))) {
+//
+//            StringBuilder sbb2 = new StringBuilder();
+//            sbb2.append("time1");// sbb2.append(','); //sbb2.append("label");
+//            sbb2.append(',');
+//            sbb2.append("device"); // sbb2.append(','); sbb2.append( "accuracy" );
+//            sbb2.append(',');
+//            sbb2.append("duration");
+//            sbb2.append(',');
+//            sbb2.append("requests");
+//            sbb2.append(',');
+//            sbb2.append("model, iteration");
+//
+//            // String item2 = dateFormat.format(new Date()) + " "+label_accu+ " time " + duration + " ms" + " requests " + requests + " model " + model;
+//
+//            sbb2.append('\n');
+//            writer.write(sbb2.toString());
+//            System.out.println("done!");
+//        } catch (FileNotFoundException e) {
+//            System.out.println(e.getMessage());
+//        }
 
 //        int intfactMDE= (int)   MDESpinner.getSelectedItem();
 //        max_d_parameter= intfactMDE /10f;
@@ -1258,13 +1267,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         modelSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelSpinner.setAdapter(modelSelectAdapter);
 
+        // ODTA Algorithm Selection
         Spinner qSpinner = (Spinner) findViewById(R.id.alg);
         qSpinner.setOnItemSelectedListener(this);
         ArrayAdapter<String> qSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_list_item_1, desiredalg);
         qSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         qSpinner.setAdapter(qSelectAdapter);
-
 
         qSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -1374,235 +1383,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         taskConfigSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         taskConfigSpinner.setAdapter(taskConfigSelectAdapter);
 
-        //decimate all obj at the same time
-//        Switch referenceObjectSwitch = (Switch) findViewById(R.id.refSwitch);
-//        referenceObjectSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-//
-//                if (b) {
-//                    decAll = true;
-//                } else {
-//                    decAll = false;
-//                }
-//            }
-//        });
-
-// for prediction
-//        Switch multipleSwitch = (Switch) findViewById(R.id.refSwitch4);
-//        multipleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-//
-//                if (b) {
-//                    autoPlace = true;
-//
-//                } else {
-//                    autoPlace = false;
-//                    // stopService(i);
-//
-//
-//                }
-//            }
-//
-//        });
-
-
-//        Switch underpercSwitch = (Switch) findViewById(R.id.un_percSwitch3);
-//        underpercSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-//                if (b) {
-//                    under_Perc = true;
-//                } else {
-//                    under_Perc = false;
-//                }
-//            }
-//        });
-
-
-
-/*
-        //create button listener for predict
-        Button predictObjectButton = (Button) findViewById(R.id.predict);
-
-        predictObjectButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                // int selectedCount = (int) countSpinner.getSelectedItem();
-
-                // if (multipleSwitchCheck == true) {
-
-                bwidth = (int) BWSpinner.getSelectedItem();
-                for (int i = 0; i < objectCount; i++)
-                    d1_prev.set(i, predicted_distances.get(i).get(0));
-
-                //for eAR
-                if (multipleSwitchCheck == true) {// nill feb -> multiple = false
-
-                    Timer t = new Timer();
-                    final int[] count = {0}; // should be before here
-                    t.scheduleAtFixedRate(
-                            new TimerTask() {
-                                public void run() {
-
-                                    if (objectCount == 0 || multipleSwitchCheck == false) {
-                                        t.cancel();
-                                        percReduction = 1;
-                                    }
-                                    ww[0] = (int) WSpinner.getSelectedItem();
-
-
-
-                                    finalw = ww[0];
-                                    int dindex = 0;// shows next time index
-                                    float d1;
-
-                                    for (int ind = 0; ind < objectCount; ind++) {
-
-                                        new DecisionAlgorithm(MainActivity.this, ind, finalw, dindex).run();
-                                        //  MainActivity.this.algoThreadPool.execute(new DecisionAlgorithm(MainActivity.this, ind, finalw, dindex));
-
-
-                                    }
-
-                                }
-                            },
-                            0,      // run first occurrence immediatetl
-                            (long) (decision_p * 1000));
-
-
-                } else if (referenceObjectSwitchCheck == true) { // this is for static eAR
-
-                    Timer t = new Timer();
-                    final int[] count = {0}; // should be before here
-                    t.scheduleAtFixedRate(
-                            new TimerTask() {
-                                public void run() {
-
-                                    if (objectCount == 0 || referenceObjectSwitchCheck == false) {
-                                        t.cancel();
-                                        percReduction = 1;
-                                    }
-
-
-
-                                    int dindex = 0;// shows next time index
-                                    //   float  d1;
-
-                                    for (int ind = 0; ind < objectCount; ind++) {
-
-                                        //new Baseline2(MainActivity.this, ind, dindex).run();
-
-
-                                        int finalInd = ind;
-                                        //  float d1 = predicted_distances.get(finalInd).get(0);// gets the first time, next 1s of every object, ie. d1 of every obj
-
-                                        float d1 = renderArray[finalInd].return_distance();
-
-                                        int indq = excelname.indexOf(renderArray[finalInd].fileName);// search in excel file to find the name of current object and get access to the index of current object
-                                        // excel file has all information for the degredation model
-                                        float gamma = excel_gamma.get(indq);
-                                        float a = excel_alpha.get(indq);
-                                        float b = excel_betta.get(indq);
-                                        float c = excel_c.get(indq);
-                                        float q1 = 0.5f;
-                                        float q2 = 0.8f;
-
-                                        float deg_error1 = Calculate_deg_er(a, b, c, d1, gamma, q1);
-                                        float deg_error2 = Calculate_deg_er(a, b, c, d1, gamma, q2);
-
-                                        float curQ = 1;
-                                        float cur_degerror = 0;
-                                        float max_nrmd = excel_maxd.get(indq);
-
-                                        float maxd = max_d.get(indq);
-                                        if (deg_error1 < maxd) {
-                                            curQ = q1;
-                                            cur_degerror = deg_error1;
-                                        } else if (deg_error2 < maxd) {
-                                            curQ = q2;
-                                            cur_degerror = deg_error2;
-                                        }
-                                        // update total tiri, deg log, quality log, time , and distance log, then redraw obj
-                                         cur_degerror=cur_degerror / max_nrmd; // normalize it
-                                        // float distance= renderArray[finalInd].return_distance();
-                                        String last_dis = distance_log.get(finalInd);
-                                        distance_log.set(finalInd, last_dis + "," + d1);
-                                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-                                        String last_time = time_log.get(finalInd);
-                                        time_log.set(finalInd, last_time + "," + dateFormat.format(new Date()).toString());
-
-                                        String lasterror = deg_error_log.get(finalInd);
-
-                                        cur_degerror = (float) (Math.round((float) (cur_degerror * 10000))) / 10000;
-                                        lastQuality.set(finalInd,1- cur_degerror);// normalized
-                                        deg_error_log.set(finalInd, lasterror + Float.toString(cur_degerror) + ",");
-
-                                        //'''upfdate everythong finally'''
-                                        String lastq_log = quality_log.get(finalInd);
-                                        quality_log.set(finalInd, lastq_log + curQ + ",");
-
-                                        // update total_tris
-                                        if ((curQ) != updateratio[finalInd]) {
-                                            total_tris = total_tris - (updateratio[finalInd] * excel_tris.get(indq));// total =total -1*objtris
-
-                                            total_tris = total_tris + (curQ * excel_tris.get(indq));// total = total + 0.8*objtris
-                                            curTrisTime= SystemClock.uptimeMillis();
-
-                                           //Camera2BasicFragment.getInstance().update((double) total_tris);// run linear reg
-
-                                            percReduction = curQ;
-                                            renderArray[ind].decimatedModelRequest(curQ, ind, referenceObjectSwitchCheck);
-                                            //  renderArray[finalInd].redraw(  finalInd ); // you should have 0.8 and 0.5 for all objects
-
-                                        }
-
-                                        updateratio[finalInd] = curQ;
-
-
-                                    }
-
-                                }
-                            },
-                            0,      // run first occurrence immediatetl
-                            (long) (decision_p * 1000));
-
-
-                } // end of baseline2
-
-
-            }// on click
-        });
-
-
-*/
-
-        //create button listener for object placer
-        Button placeObjectButton = (Button) findViewById(R.id.placeObjButton);
-
-        placeObjectButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-
-
-                float original_tris = excel_tris.get(excelname.indexOf(currentModel));
-                renderArray.add(objectCount, new decimatedRenderable(modelSpinner.getSelectedItem().toString(), original_tris));
-                addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
-
-
-//nill temporary oct 24
-//                    renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString());
-//                    addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
-
-                //}
-
-
-            }
-
-
-        });
-
-
-// this is for PAR-AI experiment: the effect of decimation on performance of AI, AI and RE , we add objects fast and then decimate them by 10% every 30 sec- figure 4 in paper
         Button Auto_decimate_butt = (Button) findViewById(R.id.autoD);
         Auto_decimate_butt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -2186,13 +1966,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         t.scheduleAtFixedRate(
                 new TimerTask() {
-
                     public void run() {
-
-
-                        if (switchToggleStream.isChecked()) // in the begining we collect data for zero tris
-
+                        if (switchToggleStream.isChecked())
                         {
+                            // in the begining we collect data for zero tris
                             // for exp4_baseline comparisons we fix the desired throughput
 //                           if(!setDesTh){
 //                               double throughput= getThroughput();
@@ -2200,8 +1977,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //                               { des_Thr=   (double) (Math.round((double) ( 0.72*throughput* 1000))) / 1000;
 //                               setDesTh=true;}
 //                           }
-                            if (true)
-                                new dataCol(MainActivity.this).run();
+                            if (true) {
+                                // new dataCol(MainActivity.this).run();
+                            }
                             else {
                                 if (odraAlg == "1")// either choose the baseline or odra algorithm
                                     new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
@@ -2212,9 +1990,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             }
 
                         }
-
                     }
-
                 },
                 0,      // run first occurrence immediately
                 2000);
@@ -2224,6 +2000,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
     double getThroughput() {
+        Switch switchToggleStream = (Switch) findViewById(R.id.switch_streamToggle);
+        if (!switchToggleStream.isChecked()) return 0;
         Log.d("size", String.valueOf(mList.size()));
         double[] meanthr = new double[mList.size()];// up to the count of different AI models
         BitmapCollector tempCollector;
@@ -2746,31 +2524,36 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 //                // File file;
 //                //file = new File(getExternalFilesDir(null), "/decimated" + renderArray[i].fileName + seekBar.getProgress() / 100f + ".sfb");
 //
-//                float ratio = updateratio[i];
+//           float newdist=renderArray[i].return_distance();
+//           //new vol = oldvol * dis1 / dis2
+//           double newvol= (volume_list.get(i)* v_dist.get(i))/newdist;
+//           double newarea= (area_list.get(i)* v_dist.get(i))/newdist;
+//            v_dist.set(i,newdist);
+//            volume_list.set(i,newvol);
+//            area_list.set(i,newarea);
+//            total_vol+=newvol;
+//            total_area+=newarea;
 //
 //
-//                if ((ratio ) != ratioArray[i]   ) {
-//                    total_tris= total_tris- (ratioArray[i]* o_tris.get(i));// total =total -1*objtris
-//                    ratioArray[i] = ratio;
-//                    /// where we update total_Tris
-//                    total_tris = total_tris+ (ratioArray[i]* o_tris.get(i));// total = total + 0.8*objtris
-//                    curTrisTime= SystemClock.uptimeMillis();
+//        }
+//
+//            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
 //
 //
+//    dateFormat.format(new Date());
 //
-//                    if(updatednetw[i]==0) // we have that obj in another local cache/ no need to add req
-//                      renderArray[i].decimatedModelRequest(ratio , i, true);
-//                    else{ // we need to req to the server
+//    String item2 = dateFormat.format(new Date()) + " num of tris: " + sum + " virtual area " + total_area + " virtual vol " + total_vol + "\n";
 //
-//                        renderArray[i].decimatedModelRequest(ratio , i, false);
-//                        Server_reg_Freq.set(i, Server_reg_Freq.get(i)+1);
-//                    }
 //
-//                    if (ratio  != 1 && ratio !=cacheArray[i] ) {
-//                        cacheArray[i] = (ratio); // updates the cache
+//    try {
+//        FileOutputStream os = new FileOutputStream(Nil, true);
+//        if (item2.getBytes() != time.getBytes()) {
 //
-//                    }
-//                }
+//            time = item2;
+//            os.write(item2.getBytes());
+//            os.close();
+//            System.out.println(item2);
+//        }
 //
 //
 //
@@ -3847,8 +3630,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
     public void givenUsingTimer_whenSchedulingTaskOnce_thenCorrect() {
-
-
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "GPU_Usage_" + fileseries + ".csv";
         String ZONEFILEPATH = currentFolder + File.separator + "Performance_Measurements" + fileseries + ".csv";
@@ -4035,19 +3816,18 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         String strNPUTemp = Float.toString(avgNPUTemp);
                         String strCamTemp = Float.toString(avgCamTemp);
                         String strCPUFreq= Float.toString(avgCPUFreq);
+
                         try (PrintWriter writer = new PrintWriter(new FileOutputStream(ZONEFILEPATH, true))) {
                             StringBuilder sb = new StringBuilder();
                             sb.append(zoneDateFormat.format(new Date()));
                             sb.append(',');
-                            sb.append(total_tris);
+                            sb.append(getThroughput());
                             sb.append(',');
                             sb.append(strCPUTemp);
                             sb.append(',');
                             sb.append(strGPUTemp);
                             sb.append(',');
                             sb.append(strNPUTemp);
-                            sb.append(',');
-                            sb.append(strCamTemp);
                             sb.append(',');
                             sb.append(strCPUFreq);
                             sb.append(',');
@@ -4061,8 +3841,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         } catch (FileNotFoundException e) {
                             System.out.println(e.getMessage());
                         }
-
-
 
                         // This is to collect position prediction every 500 ms
                         ///* nill temporaraly deactivated this
